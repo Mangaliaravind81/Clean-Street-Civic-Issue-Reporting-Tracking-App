@@ -1,26 +1,3 @@
-// const mongoose = require("mongoose");
-
-// const ComplaintSchema = new mongoose.Schema({
-//   title: String,
-//   priority: String,
-//   issueType: String,
-//   address: String,
-//   description: String,
-
-//   latitude: String,
-//   longitude: String,
-
-//   images: [String],
-
-//   createdAt: {
-//     type: Date,
-//     default: Date.now,
-//   },
-// });
-
-// module.exports = mongoose.model("Complaint", ComplaintSchema);
-
-//stores the data dynamically
 const mongoose = require("mongoose");
 
 const ComplaintSchema = new mongoose.Schema({
@@ -29,19 +6,22 @@ const ComplaintSchema = new mongoose.Schema({
   issueType: String,
   address: String,
   description: String,
-  postedBy: String, //new
+  postedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   latitude: String,
   longitude: String,
 
   images: [String],
 
-  // ✅ ADDED
+
   status: {
     type: String,
     default: "Pending",
   },
 
-  // ✅ ADDED
+
   likes: {
     type: Number,
     default: 0,
@@ -54,6 +34,10 @@ const ComplaintSchema = new mongoose.Schema({
   comments: [
     {
       text: String,
+      postedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
       createdAt: {
         type: Date,
         default: Date.now,

@@ -47,9 +47,10 @@ const Login = () => {
         return;
       }
 
-      // Save JWT token
+      // Save JWT token and user info
       localStorage.setItem("token", data.token);
-      // localStorage.setItem("username", data.user.name);
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("username", data.user.name);
 
       navigate("/dashboard");
     } catch (err) {

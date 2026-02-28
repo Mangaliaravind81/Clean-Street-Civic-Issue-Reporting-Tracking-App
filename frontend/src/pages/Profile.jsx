@@ -1,32 +1,8 @@
-// import Navbaruser from "../components/Navbaruser";
-// const Profile = () => {
-//   return (
-//     <div>
-//       {" "}
-//       <Navbaruser />
-//       <div className="min-h-screen bg-gray-200 text-left flex gap-4">
-//         <div
-//           className=" bg-white w-100 h-120 m-4 md:m-6 p-4 md:p-5 rounded-xl
-//                     max-w-7xl  mx-auto flex flex-col md:flex-row gap-4"
-//         >
 
-//         </div>
-//         <div
-//           className=" bg-white w-180 h-120 m-4 md:m-6 p-4 md:p-5 rounded-xl
-//         max-w-7xl  mx-auto flex flex-col md:flex-row gap-4"
-//         >
-//           sgdjagh
-//         </div>
-//       </div>
-//     </div>
-//     //
-//   );
-// };
-// export default Profile;
 
 import Navbaruser from "../components/Navbaruser";
 
-/* ===== Profile Avatar Component ===== */
+
 const ProfileAvatar = ({ name, photo }) => {
   const firstLetter = name?.charAt(0).toUpperCase();
 
@@ -47,19 +23,19 @@ const Profile = () => {
       <Navbaruser />
 
       <div className="min-h-screen bg-gray-200 text-left flex gap-4">
-        {/* ===== FIRST BOX ===== */}
+
         <div
           className=" bg-white w-100 h-120 m-4 md:m-6 p-4 md:p-5 rounded-xl
                     max-w-7xl  mx-auto flex flex-col md:flex-row gap-4"
         >
-          {/* Avatar added here */}
+
           <ProfileAvatar
             name="Aravind"
-            photo="" // later replace with user.profilePhoto
+            photo=""
           />
         </div>
 
-        {/* ===== SECOND BOX (UNCHANGED) ===== */}
+
         <div
           className=" bg-white w-180 h-120 m-4 md:m-6 p-4 md:p-5 rounded-xl 
         max-w-7xl  mx-auto flex flex-col md:flex-row gap-4"
