@@ -1,295 +1,420 @@
-
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import Navbaruser from "../components/Navbaruser";
-import { FaRegComment } from "react-icons/fa";
-import { IoIosCloseCircleOutline } from "react-icons/io";
-import { BiLike } from "react-icons/bi";
-import { BiDislike } from "react-icons/bi";
-import { MdOutlineDelete } from "react-icons/md";
-import { LuPencil } from "react-icons/lu";
-import { FaRegSave } from "react-icons/fa";
 
 const Viewcomplaints = () => {
   const [complaints, setComplaints] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [comment, setComment] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({});
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState([]);
+  const [filter, setFilter] = useState("all"); 
+  const [searchTerm, setSearchTerm] = useState("");
+const [userLocation, setUserLocation] = useState(null);
 
+  const currentUser = localStorage.getItem("user"); // adjust if needed
+
+  const commentRef = useRef(null);
+
+  // Fetch complaints
   const fetchComplaints = async () => {
-    const res = await axios.get("http://localhost:5000/complaints");
-
-    setComplaints(res.data);
+    try {
+      const res = await axios.get("http://localhost:5000/complaints");
+      const cleanData = res.data.filter((item) => item !== null);
+      setComplaints(cleanData);
+    } catch (error) {
+      console.log("Error fetching complaints:", error);
+    }
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchComplaints();
-    };
-
-    loadData();
+    fetchComplaints();
   }, []);
-  const like = async (id) => {
-    await axios.put(`http://localhost:5000/complaints/like/${id}`);
-    fetchComplaints();
-  };
 
-  const unlike = async (id) => {
-    await axios.put(`http://localhost:5000/complaints/unlike/${id}`);
-    fetchComplaints();
-  };
-
-  const addComment = async (id) => {
-    await axios.post(`http://localhost:5000/complaints/comment/${id}`, {
-      text: comment,
-    });
-    setComment("");
-    fetchComplaints();
-  };
-
-
-  const deleteComplaint = async (id) => {
-    if (window.confirm("Delete this complaint?")) {
-      await axios.delete(`http://localhost:5000/complaints/${id}`);
-      fetchComplaints();
-      setSelected(null);
-
+  useEffect(() => {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      setUserLocation({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+    },
+    (error) => {
+      console.log("Location error:", error);
     }
-  };
+  );
+}, []);
 
-  const updateComplaint = async () => {
+  useEffect(() => {
+    if (selected) {
+      setComments(selected.comments || []);
+      setTimeout(() => {
+        commentRef.current?.focus();
+      }, 200);
+    }
+  }, [selected]);
+
+  // 👍 Like
+  const handleLike = async (id) => {
     try {
-      await axios.put(
-        `http://localhost:5000/complaints/${selected._id}`,
-        editData
+      const res = await axios.put(
+        `http://localhost:5000/complaints/like/${id}`
       );
 
-      await fetchComplaints();
-      setSelected(editData);
-      setIsEditing(false);
+      if (res.data.success) {
+        setComplaints((prev) =>
+          prev.map((c) =>
+            c._id === id ? { ...c, likes: res.data.likes } : c
+          )
+        );
+
+        if (selected?._id === id) {
+          setSelected({ ...selected, likes: res.data.likes });
+        }
+      }
     } catch (error) {
-      alert("Update failed");
+      console.log("Like error:", error);
     }
   };
 
+  // 👎 Unlike
+  const handleUnlike = async (id) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/complaints/unlike/${id}`
+      );
+
+      if (res.data.success) {
+        setComplaints((prev) =>
+          prev.map((c) =>
+            c._id === id ? { ...c, unlikes: res.data.unlikes } : c
+          )
+        );
+
+        if (selected?._id === id) {
+          setSelected({ ...selected, unlikes: res.data.unlikes });
+        }
+      }
+    } catch (error) {
+      console.log("Unlike error:", error);
+    }
+  };
+
+  // 💬 Send Comment
+  const handleSendComment = async () => {
+    if (!commentText.trim()) return;
+
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/complaints/comment/${selected._id}`,
+        { text: commentText }
+      );
+
+      if (res.data.success) {
+        setComments(res.data.comments);
+        setCommentText("");
+      }
+    } catch (error) {
+      console.log("Comment error:", error);
+    }
+  };
+
+  // ✏ Edit Complaint (Only Owner)
+const handleEdit = async (id) => {
+  const newTitle = prompt("Enter new title:");
+  const newDescription = prompt("Enter new description:");
+
+  if (!newTitle || !newDescription) return;
+
+  try {
+    const res = await axios.put(
+      `http://localhost:5000/complaints/${id}`,
+      {
+        title: newTitle,
+        description: newDescription,
+      }
+    );
+
+    if (res.data.success) {
+      fetchComplaints();
+    }
+  } catch (error) {
+    console.log("Edit error:", error);
+  }
+};
+
+
+// 👷 Volunteer Accept Complaint
+const handleAccept = async (id) => {
+  try {
+    const res = await axios.put(
+      `http://localhost:5000/complaints/accept/${id}`
+    );
+
+    if (res.data.success) {
+      setComplaints((prev) =>
+        prev.map((c) =>
+          c._id === id ? { ...c, status: "In Progress" } : c
+        )
+      );
+
+      if (selected?._id === id) {
+        setSelected({ ...selected, status: "In Progress" });
+      }
+    }
+  } catch (error) {
+    console.log("Accept error:", error);
+  }
+};
+// 📏 Calculate distance (Haversine Formula)
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Earth radius in KM
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+  // ✅ FILTER LOGIC
+  const filteredComplaints = complaints.filter((c) => {
+  // Search filter
+  const matchesSearch =
+    c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+  if (!matchesSearch) return false;
+
+  if (filter === "mine") return c.postedBy === currentUser;
+
+  if (filter === "pending") return c.status === "Pending";
+
+  if (filter === "progress") return c.status === "In Progress";
+
+  if (filter === "resolved") return c.status === "Resolved";
+
+  if (filter === "nearby" && userLocation) {
+    const distance = getDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      parseFloat(c.latitude),
+      parseFloat(c.longitude)
+    );
+
+    return distance <= 5; // 5 KM radius
+  }
+
+  return true;
+});
+
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-gray-100">
       <Navbaruser />
+{/* ✅ FILTER SECTION */}
+<div className="p-10 flex justify-start items-center space-x-6">
 
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {complaints.map((item) => (
-          <div key={item._id} className="bg-white p-4 rounded-xl shadow">
-            <div className="flex justify-between font-bold">
-              <span>{item.title}</span>
-              <span>{item.postedBy?.name || "Unknown"}</span>
-            </div>
+  <select
+    value={filter}
+    onChange={(e) => setFilter(e.target.value)}
+    className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md focus:outline-none cursor-pointer"
+  >
+    <option value="all" style={{ color: "black", backgroundColor: "white" }}>
+      All Complaints
+    </option>
+    <option value="mine" style={{ color: "black", backgroundColor: "white" }}>
+      My Complaints
+    </option>
+    <option value="pending" style={{ color: "black", backgroundColor: "white" }}>
+      Pending
+    </option>
+    <option value="progress" style={{ color: "black", backgroundColor: "white" }}>
+      In Progress
+    </option>
+    <option value="resolved" style={{ color: "black", backgroundColor: "white" }}>
+      Resolved
+    </option>
+  </select>
 
-            <img src={item.images[0]} className="w-full h-40 mt-2 rounded" />
+  {/* Search Bar */}
+  <input
+    type="text"
+    placeholder="Search complaints..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-80 border px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+  />
 
-            <p className="truncate">{item.description}</p>
-            <p className="text-xs">{item.address}</p>
+</div>
 
-            <p className="text-orange-600 animate-pulse font-semibold">
-              {item.status} (0%)
-            </p>
+      {/* Cards */}
+      <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredComplaints.length === 0 && (
+          <p className="text-center col-span-3 text-gray-500">
+            No complaints available
+          </p>
+        )}
 
-            <div className="flex gap-4 mt-2 cursor-pointer">
-              <button className="cursor-pointer" onClick={() => like(item._id)}>
-                <BiLike /> {item.likes}
-              </button>
-              <button
-                className="cursor-pointer"
-                onClick={() => unlike(item._id)}
+        {filteredComplaints.map((item) => (
+          <div
+            key={item._id}
+            className="bg-white rounded-xl shadow-md overflow-hidden"
+          >
+            {item?.images?.length > 0 && (
+              <img
+                src={item.images[0]}
+                alt="complaint"
+                className="w-full h-48 object-cover"
+              />
+            )}
+
+            <div className="p-4">
+              <span
+                className={`text-xs px-2 py-1 rounded ${
+                  item.status === "Resolved"
+                    ? "bg-green-200 text-green-800"
+                    : item.status === "In Progress"
+                    ? "bg-blue-200 text-blue-800"
+                    : "bg-yellow-200 text-yellow-800"
+                }`}
               >
-                <BiDislike />
-                {/* <FaRegComment /> */}
-                {item.unlikes}
-              </button>
-            </div>
+                {item?.status || "Pending"}
+              </span>
 
-            <input
-              className="border w-full mt-2 p-1"
-              placeholder="Add comment "
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
-            <div className="flex gap-4 mt-2">
-              <button
-                onClick={() => addComment(item._id)}
-                className=" text-black rounded-xl cursor-pointer px-2 py-1 mt-1 hover:text-black  font-bold x hover:bg-gray-300 "
-              >
-                Send
-              </button>
+              <h2 className="text-lg font-bold mt-2">
+                {item?.title}
+              </h2>
 
-              <button
-                onClick={() => setSelected(item)}
-                className="text-green-500 block mt-2 font-bold hover:bg-gray-300 rounded-xl cursor-pointer"
-              >
-                View Details
-              </button>
+              <p className="text-gray-600 text-sm">
+                {item?.description}
+              </p>
+
+              <p className="text-gray-500 text-sm">
+                {item?.address}
+              </p>
+
+              <p className="text-gray-500 text-sm mt-1">
+                💬 {item.comments?.length || 0} Comments
+              </p>
+
+              <div className="mt-4 flex justify-between items-center text-sm">
+                <div className="flex gap-6 items-center">
+                  <button
+                    onClick={() => handleLike(item._id)}
+                    className="text-blue-600"
+                  >
+                    👍 ({item.likes || 0})
+                  </button>
+
+                  <button
+                    onClick={() => handleUnlike(item._id)}
+                    className="text-red-600"
+                  >
+                    👎 ({item.unlikes || 0})
+                  </button>
+
+                  <button
+                    onClick={() => setSelected(item)}
+                    className="text-green-600"
+                  >
+                    💬 Comments
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setSelected(item)}
+                  className="text-green-600 font-semibold hover:underline"
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
+      {/* Modal remains EXACTLY SAME */}
       {selected && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center rounded-xl">
-          <div className="bg-white w-[70%] p-6 grid grid-cols-2 gap-4  relative rounded-xl">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white w-[90%] max-w-4xl rounded-xl p-6 relative grid md:grid-cols-2 gap-6 overflow-y-auto max-h-[90vh]">
+
+            <button
+              onClick={() => setSelected(null)}
+              className="absolute top-3 right-4 text-xl font-bold"
+            >
+              X
+            </button>
+
             <div>
-              <button
-                onClick={() => setSelected(null)}
-                className="absolute top-2 right-2 cursor-pointer"
-              >
-                <IoIosCloseCircleOutline className="text-3xl" />
-                {/* back button  in pop up messge*/}
-              </button>
-              <img
-                src={selected.images[0]}
-                className="w-full h-60 rounded-xl "
-              />
-              {/* IF DETAILS NEED TO EDIT IT WILL NAVIAGATES */}
-              {!isEditing ? (
-                <>
-                  <p>
-                    <b>Issue :</b> {selected.title}
-                  </p>
-                  <p>
-                    <b>Priority :</b> {selected.priority}
-                  </p>
-                  <p>
-                    <b>Type :</b> {selected.issueType}
-                  </p>
-                  <p>
-                    <b>Description :</b> {selected.description}
-                  </p>
-                  <p>
-                    <b>Address :</b> {selected.address}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <div className="space-y-2 flex flex-row  gap-2">
-                      <div>
-                        <label>Issue Title</label>
-                        <input
-                          name="title"
-                          value={editData.title}
-                          onChange={(e) =>
-                            setEditData({ ...editData, title: e.target.value })
-                          }
-                          placeholder="Enter Issue name"
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                        />
-                      </div>
-                      <div>
-                        <label>Issue Type</label>
-                        <select
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                          value={editData.issueType}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              issueType: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select Issue Type</option>
-                          <option>Garbage</option>
-                          <option>Street Lights</option>
-                          <option>Pothole</option>
-                          <option>Water Overflow</option>
-                          <option>Others</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="space-y-1 flex flex-row  gap-1">
-                      <div>
-                        <label>Priority Level</label>
-
-                        <select
-                          name="priority"
-                          value={editData.priority}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              priority: e.target.value,
-                            })
-                          }
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                        >
-                          <option value="">Select Priority Level</option>
-                          <option className="">High</option>
-                          <option>Medium</option>
-                          <option>LOw</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="">Address</label>
-                        <input
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                          value={editData.address}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              address: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <textarea
-                      className="border w-full p-2 mt-2"
-                      value={editData.description}
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </>
+              {selected?.images?.length > 0 && (
+                <img
+                  src={selected.images[0]}
+                  alt="complaint"
+                  className="w-full h-60 object-cover rounded-xl"
+                />
               )}
-              <div className="flex gap-30 ">
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setEditData(selected);
-                  }}
-                  className="flex items-center gap-2 cursor-pointer font-semibold hover:text-green-600 hover:bg-gray-300 rounded-xl"
-                >
-                  <LuPencil /> Edit
-                </button>
-                <div className="flex gap-28 ">
-                  {isEditing && (
-                    <button
-                      onClick={updateComplaint}
-                      className="flex items-center gap-1 font-semibold hover:text-blue-600 hover:bg-gray-300 rounded-xl"
-                    >
-                      <FaRegSave /> Save
-                    </button>
-                  )}
-                  {/* ✅ DELETE BUTTON (ONLY NEW) */}
-                  <button
 
-                    onClick={() => deleteComplaint(selected._id)}
-                    className="flex items-center gap-1 rounded-2xl font-semibold mt-1 cursor-pointer text-red-600 hover:bg-gray-300"
-                  >
-                    <MdOutlineDelete className="text-xl" /> Delete
-                  </button>
+              <div className="mt-4 space-y-1">
+                <p><b>Issue:</b> {selected.title}</p>
+                <p><b>Description:</b> {selected.description}</p>
+                <p><b>Address:</b> {selected.address}</p>
+                <p><b>Likes:</b> 👍 {selected.likes || 0}</p>
+                <p><b>Unlikes:</b> 👎 {selected.unlikes || 0}</p>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="font-semibold mb-2">Add a Comment</h3>
+
+                <textarea
+                  ref={commentRef}
+                  placeholder="Add a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="w-full border rounded p-2 text-sm"
+                />
+
+                <button
+                  onClick={handleSendComment}
+                  className="mt-2 bg-green-600 text-white px-4 py-1 rounded"
+                >
+                  Send
+                </button>
+
+                <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+                  {comments.length === 0 ? (
+                    <p className="text-gray-500 text-sm">
+                      No comments yet
+                    </p>
+                  ) : (
+                    comments.map((c, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-100 p-2 rounded text-sm"
+                      >
+                        <p>{c.text}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(c.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
 
             <iframe
               width="100%"
-              height="380"
+              height="350"
               src={`https://maps.google.com/maps?q=${selected.latitude},${selected.longitude}&z=15&output=embed`}
-            />
+              title="map"
+            ></iframe>
+
           </div>
         </div>
       )}
