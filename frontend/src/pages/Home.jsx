@@ -1,5 +1,3 @@
-
-
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import hero from "../assets/hero.jpg";
@@ -39,13 +37,19 @@ function Home() {
           </p>
 
           <div className="mt-6 flex justify-center gap-4">
-            <button className="bg-green-600 text-white px-6 py-3 rounded-lg">
+            <NavLink
+              to="/reportissue"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg"
+            >
               Report Issue
-            </button>
+            </NavLink>
 
-            <button className="bg-white border text-green-700 px-6 py-3 rounded-lg">
+            <NavLink
+              to="/viewcomplaints"
+              className="bg-white border text-green-700 px-6 py-3 rounded-lg"
+            >
               View Reports
-            </button>
+            </NavLink>
           </div>
         </div>
       </section>

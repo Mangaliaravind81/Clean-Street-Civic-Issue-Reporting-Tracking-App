@@ -1,295 +1,197 @@
-
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbaruser from "../components/Navbaruser";
-import { FaRegComment } from "react-icons/fa";
-import { IoIosCloseCircleOutline } from "react-icons/io";
-import { BiLike } from "react-icons/bi";
-import { BiDislike } from "react-icons/bi";
-import { MdOutlineDelete } from "react-icons/md";
-import { LuPencil } from "react-icons/lu";
-import { FaRegSave } from "react-icons/fa";
 
 const Viewcomplaints = () => {
   const [complaints, setComplaints] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [comment, setComment] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({});
+  const [commentText, setCommentText] = useState("");
 
+  // Fetch complaints
   const fetchComplaints = async () => {
-    const res = await axios.get("http://localhost:5000/complaints");
-
-    setComplaints(res.data);
+    try {
+      const res = await axios.get("http://localhost:5000/complaints");
+      const cleanData = res.data.filter((item) => item !== null);
+      setComplaints(cleanData);
+    } catch (error) {
+      console.log("Error fetching complaints:", error);
+    }
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchComplaints();
-    };
-
-    loadData();
+    fetchComplaints();
   }, []);
-  const like = async (id) => {
-    await axios.put(`http://localhost:5000/complaints/like/${id}`);
-    fetchComplaints();
-  };
 
-  const unlike = async (id) => {
-    await axios.put(`http://localhost:5000/complaints/unlike/${id}`);
-    fetchComplaints();
-  };
-
-  const addComment = async (id) => {
-    await axios.post(`http://localhost:5000/complaints/comment/${id}`, {
-      text: comment,
-    });
-    setComment("");
-    fetchComplaints();
-  };
-
-
-  const deleteComplaint = async (id) => {
-    if (window.confirm("Delete this complaint?")) {
-      await axios.delete(`http://localhost:5000/complaints/${id}`);
-      fetchComplaints();
-      setSelected(null);
-
-    }
-  };
-
-  const updateComplaint = async () => {
+  // Like (logic same)
+  const handleLike = async (id) => {
     try {
-      await axios.put(
-        `http://localhost:5000/complaints/${selected._id}`,
-        editData
+      const res = await axios.put(
+        `http://localhost:5000/complaints/${id}/like`
       );
 
-      await fetchComplaints();
-      setSelected(editData);
-      setIsEditing(false);
+      if (res.data.success) {
+        setComplaints((prev) =>
+          prev.map((c) =>
+            c._id === id ? { ...c, likes: res.data.likes } : c
+          )
+        );
+
+        if (selected?._id === id) {
+          setSelected({ ...selected, likes: res.data.likes });
+        }
+      }
     } catch (error) {
-      alert("Update failed");
+      console.log("Like error:", error);
     }
+  };
+
+  // Unlike (UI only for now)
+  const handleUnlikeUI = (id) => {
+    setComplaints((prev) =>
+      prev.map((c) =>
+        c._id === id ? { ...c, unlikes: (c.unlikes || 0) + 1 } : c
+      )
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-gray-100">
       <Navbaruser />
 
+      {/* Cards */}
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {complaints.length === 0 && (
+          <p className="text-center col-span-3 text-gray-500">
+            No complaints available
+          </p>
+        )}
+
         {complaints.map((item) => (
-          <div key={item._id} className="bg-white p-4 rounded-xl shadow">
-            <div className="flex justify-between font-bold">
-              <span>{item.title}</span>
-              <span>{item.postedBy?.name || "Unknown"}</span>
-            </div>
+          <div
+            key={item._id}
+            className="bg-white rounded-xl shadow-md overflow-hidden"
+          >
+            {item?.images?.length > 0 && (
+              <img
+                src={item.images[0]}
+                alt="complaint"
+                className="w-full h-48 object-cover"
+              />
+            )}
 
-            <img src={item.images[0]} className="w-full h-40 mt-2 rounded" />
-
-            <p className="truncate">{item.description}</p>
-            <p className="text-xs">{item.address}</p>
-
-            <p className="text-orange-600 animate-pulse font-semibold">
-              {item.status} (0%)
-            </p>
-
-            <div className="flex gap-4 mt-2 cursor-pointer">
-              <button className="cursor-pointer" onClick={() => like(item._id)}>
-                <BiLike /> {item.likes}
-              </button>
-              <button
-                className="cursor-pointer"
-                onClick={() => unlike(item._id)}
+            <div className="p-4">
+              <span
+                className={`text-xs px-2 py-1 rounded ${
+                  item.status === "Resolved"
+                    ? "bg-green-200 text-green-800"
+                    : "bg-yellow-200 text-yellow-800"
+                }`}
               >
-                <BiDislike />
-                {/* <FaRegComment /> */}
-                {item.unlikes}
-              </button>
-            </div>
+                {item?.status || "Pending"}
+              </span>
 
-            <input
-              className="border w-full mt-2 p-1"
-              placeholder="Add comment "
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
-            <div className="flex gap-4 mt-2">
-              <button
-                onClick={() => addComment(item._id)}
-                className=" text-black rounded-xl cursor-pointer px-2 py-1 mt-1 hover:text-black  font-bold x hover:bg-gray-300 "
-              >
-                Send
-              </button>
+              <h2 className="text-lg font-bold mt-2">
+                {item?.title || "No Title"}
+              </h2>
 
-              <button
-                onClick={() => setSelected(item)}
-                className="text-green-500 block mt-2 font-bold hover:bg-gray-300 rounded-xl cursor-pointer"
-              >
-                View Details
-              </button>
+              <p className="text-gray-600 text-sm">
+                {item?.description || "No description"}
+              </p>
+
+              <p className="text-gray-500 text-sm">
+                {item?.address || "No address"}
+              </p>
+
+              <div className="mt-4 flex justify-between items-center text-sm">
+                <div className="flex gap-6 text-sm items-center">
+                  <button
+                    onClick={() => handleLike(item._id)}
+                    className="text-blue-600 flex items-center gap-1"
+                  >
+                    👍 <span>Upvote</span> ({item.likes || 0})
+                  </button>
+
+                  <button
+                    onClick={() => handleUnlikeUI(item._id)}
+                    className="text-red-600 flex items-center gap-1"
+                  >
+                    👎 <span>Downvote</span> ({item.unlikes || 0})
+                  </button>
+
+                  <button
+                    onClick={() => setSelected(item)}
+                    className="text-green-600 flex items-center gap-1"
+                  >
+                    💬 <span>Comments</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setSelected(item)}
+                  className="text-green-600 font-semibold hover:underline"
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
+      {/* Modal */}
       {selected && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center rounded-xl">
-          <div className="bg-white w-[70%] p-6 grid grid-cols-2 gap-4  relative rounded-xl">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
+          <div className="bg-white w-[90%] max-w-4xl rounded-xl p-6 relative grid md:grid-cols-2 gap-6">
+
+            <button
+              onClick={() => setSelected(null)}
+              className="absolute top-3 right-4 text-xl font-bold"
+            >
+              X
+            </button>
+
             <div>
-              <button
-                onClick={() => setSelected(null)}
-                className="absolute top-2 right-2 cursor-pointer"
-              >
-                <IoIosCloseCircleOutline className="text-3xl" />
-                {/* back button  in pop up messge*/}
-              </button>
-              <img
-                src={selected.images[0]}
-                className="w-full h-60 rounded-xl "
-              />
-              {/* IF DETAILS NEED TO EDIT IT WILL NAVIAGATES */}
-              {!isEditing ? (
-                <>
-                  <p>
-                    <b>Issue :</b> {selected.title}
-                  </p>
-                  <p>
-                    <b>Priority :</b> {selected.priority}
-                  </p>
-                  <p>
-                    <b>Type :</b> {selected.issueType}
-                  </p>
-                  <p>
-                    <b>Description :</b> {selected.description}
-                  </p>
-                  <p>
-                    <b>Address :</b> {selected.address}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <div className="space-y-2 flex flex-row  gap-2">
-                      <div>
-                        <label>Issue Title</label>
-                        <input
-                          name="title"
-                          value={editData.title}
-                          onChange={(e) =>
-                            setEditData({ ...editData, title: e.target.value })
-                          }
-                          placeholder="Enter Issue name"
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                        />
-                      </div>
-                      <div>
-                        <label>Issue Type</label>
-                        <select
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                          value={editData.issueType}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              issueType: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select Issue Type</option>
-                          <option>Garbage</option>
-                          <option>Street Lights</option>
-                          <option>Pothole</option>
-                          <option>Water Overflow</option>
-                          <option>Others</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="space-y-1 flex flex-row  gap-1">
-                      <div>
-                        <label>Priority Level</label>
-
-                        <select
-                          name="priority"
-                          value={editData.priority}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              priority: e.target.value,
-                            })
-                          }
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                        >
-                          <option value="">Select Priority Level</option>
-                          <option className="">High</option>
-                          <option>Medium</option>
-                          <option>LOw</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="">Address</label>
-                        <input
-                          className="border w-45 rounded-sm text-sm mb-2 p-2"
-                          value={editData.address}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              address: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <textarea
-                      className="border w-full p-2 mt-2"
-                      value={editData.description}
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </>
+              {selected?.images?.length > 0 && (
+                <img
+                  src={selected.images[0]}
+                  alt="complaint"
+                  className="w-full h-60 object-cover rounded-xl"
+                />
               )}
-              <div className="flex gap-30 ">
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setEditData(selected);
-                  }}
-                  className="flex items-center gap-2 cursor-pointer font-semibold hover:text-green-600 hover:bg-gray-300 rounded-xl"
-                >
-                  <LuPencil /> Edit
-                </button>
-                <div className="flex gap-28 ">
-                  {isEditing && (
-                    <button
-                      onClick={updateComplaint}
-                      className="flex items-center gap-1 font-semibold hover:text-blue-600 hover:bg-gray-300 rounded-xl"
-                    >
-                      <FaRegSave /> Save
-                    </button>
-                  )}
-                  {/* ✅ DELETE BUTTON (ONLY NEW) */}
-                  <button
 
-                    onClick={() => deleteComplaint(selected._id)}
-                    className="flex items-center gap-1 rounded-2xl font-semibold mt-1 cursor-pointer text-red-600 hover:bg-gray-300"
-                  >
-                    <MdOutlineDelete className="text-xl" /> Delete
-                  </button>
-                </div>
+              <div className="mt-4 space-y-1">
+                <p><b>Issue:</b> {selected.title}</p>
+                <p><b>Priority:</b> {selected.priority}</p>
+                <p><b>Type:</b> {selected.issueType}</p>
+                <p><b>Description:</b> {selected.description}</p>
+                <p><b>Address:</b> {selected.address}</p>
+                <p><b>Likes:</b> 👍 {selected.likes || 0}</p>
+                <p><b>Unlikes:</b> 👎 {selected.unlikes || 0}</p>
+              </div>
+
+              {/* Comment UI Only */}
+              <div className="mt-4">
+                <textarea
+                  placeholder="Add a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="w-full border rounded p-2 text-sm"
+                />
+                <button
+                  className="mt-2 bg-green-600 text-white px-4 py-1 rounded"
+                >
+                  Send
+                </button>
               </div>
             </div>
 
             <iframe
               width="100%"
-              height="380"
+              height="350"
               src={`https://maps.google.com/maps?q=${selected.latitude},${selected.longitude}&z=15&output=embed`}
-            />
+              title="map"
+            ></iframe>
+
           </div>
         </div>
       )}

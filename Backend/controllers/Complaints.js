@@ -15,8 +15,11 @@ exports.createComplaint = async (req, res) => {
       latitude: req.body.latitude,
       longitude: req.body.longitude,
 
-      images: req.body.images,
-    });
+      images: req.body.images || [],
+      likes: 0,
+      unlikes: 0,
+      comments: [],
+          });
 
     res.status(201).json({
       success: true,
@@ -42,11 +45,16 @@ exports.getComplaints = async (req, res) => {
 
 exports.likeComplaint = async (req, res) => {
   try {
-    const c = await Complaint.findById(req.params.id);
-    if (!c) return res.status(404).json({ success: false });
-    c.likes += 1;
-    await c.save();
-    res.json({ success: true, likes: c.likes });
+    const complaint = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+
+    if (!complaint)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    res.json({ success: true, likes: complaint.likes });
   } catch (err) {
     res.status(500).json({ success: false });
   }
@@ -54,11 +62,16 @@ exports.likeComplaint = async (req, res) => {
 
 exports.unlikeComplaint = async (req, res) => {
   try {
-    const c = await Complaint.findById(req.params.id);
-    if (!c) return res.status(404).json({ success: false });
-    c.unlikes += 1;
-    await c.save();
-    res.json({ success: true, unlikes: c.unlikes });
+    const complaint = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { unlikes: 1 } },
+      { new: true }
+    );
+
+    if (!complaint)
+      return res.status(404).json({ success: false, message: "Not found" });
+
+    res.json({ success: true, unlikes: complaint.unlikes });
   } catch (err) {
     res.status(500).json({ success: false });
   }
