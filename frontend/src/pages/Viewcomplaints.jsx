@@ -3,16 +3,36 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbaruser from "../components/Navbaruser";
-import { FaRegComment } from "react-icons/fa";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { BiLike } from "react-icons/bi";
 import { BiDislike } from "react-icons/bi";
 import { MdOutlineDelete } from "react-icons/md";
 import { LuPencil } from "react-icons/lu";
 import { FaRegSave } from "react-icons/fa";
+import { MdFilterList } from "react-icons/md";
+
+// Haversine formula: distance in km between two lat/lng points
+const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const NEARBY_RADIUS_KM = 10;
 
 const Viewcomplaints = () => {
   const [complaints, setComplaints] = useState([]);
+  const [filter, setFilter] = useState("all"); // "all" | "nearby"
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
   const [selected, setSelected] = useState(null);
   const [comment, setComment] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -20,7 +40,6 @@ const Viewcomplaints = () => {
 
   const fetchComplaints = async () => {
     const res = await axios.get("http://localhost:5000/complaints");
-
     setComplaints(res.data);
   };
 
@@ -28,9 +47,60 @@ const Viewcomplaints = () => {
     const loadData = async () => {
       await fetchComplaints();
     };
-
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (filter === "nearby") {
+      if (!navigator.geolocation) {
+        setLocationError("Geolocation is not supported by your browser");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+          setLocationError(null);
+        },
+        () => {
+          setLocationError("Could not get your location. Showing all complaints.");
+          setFilter("all");
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setUserLocation(null);
+      setLocationError(null);
+    }
+  }, [filter]);
+
+  const displayComplaints =
+    filter === "nearby" && userLocation
+      ? complaints
+          .filter(
+            (c) =>
+              c.latitude &&
+              c.longitude &&
+              getDistanceKm(
+                userLocation.lat,
+                userLocation.lng,
+                parseFloat(c.latitude),
+                parseFloat(c.longitude)
+              ) <= NEARBY_RADIUS_KM
+          )
+          .map((c) => ({
+            ...c,
+            distance: getDistanceKm(
+              userLocation.lat,
+              userLocation.lng,
+              parseFloat(c.latitude),
+              parseFloat(c.longitude)
+            ),
+          }))
+          .sort((a, b) => a.distance - b.distance)
+      : complaints;
   const like = async (id) => {
     await axios.put(`http://localhost:5000/complaints/like/${id}`);
     fetchComplaints();
@@ -78,18 +148,64 @@ const Viewcomplaints = () => {
     <div className="min-h-screen bg-gray-200">
       <Navbaruser />
 
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {complaints.map((item) => (
+      <div className="p-6">
+        {/* Filter Button */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2 bg-white rounded-lg shadow p-1">
+            <MdFilterList className="text-xl text-green-600" />
+            <span className="text-sm font-medium text-gray-600">Filter:</span>
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                filter === "all"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              All Complaints
+            </button>
+            <button
+              onClick={() => setFilter("nearby")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                filter === "nearby"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Nearby ({NEARBY_RADIUS_KM} km)
+            </button>
+          </div>
+          {filter === "nearby" && userLocation && (
+            <span className="text-xs text-gray-500">
+              Showing {displayComplaints.length} within {NEARBY_RADIUS_KM} km
+            </span>
+          )}
+          {locationError && (
+            <span className="text-xs text-amber-600">{locationError}</span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayComplaints.map((item) => (
           <div key={item._id} className="bg-white p-4 rounded-xl shadow">
             <div className="flex justify-between font-bold">
               <span>{item.title}</span>
               <span>{item.postedBy?.name || "Unknown"}</span>
             </div>
 
-            <img src={item.images[0]} className="w-full h-40 mt-2 rounded" />
+            {item.images?.[0] ? (
+              <img src={item.images[0]} className="w-full h-40 mt-2 rounded object-cover" alt={item.title} />
+            ) : (
+              <div className="w-full h-40 mt-2 rounded bg-gray-200 flex items-center justify-center text-gray-400 text-sm">No image</div>
+            )}
 
             <p className="truncate">{item.description}</p>
             <p className="text-xs">{item.address}</p>
+            {item.distance !== undefined && (
+              <p className="text-xs text-green-600 font-medium">
+                {item.distance.toFixed(1)} km away
+              </p>
+            )}
 
             <p className="text-orange-600 animate-pulse font-semibold">
               {item.status} (0%)
@@ -132,6 +248,7 @@ const Viewcomplaints = () => {
             </div>
           </div>
         ))}
+        </div>
       </div>
 
       {selected && (
@@ -145,10 +262,15 @@ const Viewcomplaints = () => {
                 <IoIosCloseCircleOutline className="text-3xl" />
                 {/* back button  in pop up messge*/}
               </button>
-              <img
-                src={selected.images[0]}
-                className="w-full h-60 rounded-xl "
-              />
+              {selected.images?.[0] ? (
+                <img
+                  src={selected.images[0]}
+                  className="w-full h-60 rounded-xl object-cover"
+                  alt={selected.title}
+                />
+              ) : (
+                <div className="w-full h-60 rounded-xl bg-gray-200 flex items-center justify-center text-gray-400">No image</div>
+              )}
               {/* IF DETAILS NEED TO EDIT IT WILL NAVIAGATES */}
               {!isEditing ? (
                 <>

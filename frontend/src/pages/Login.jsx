@@ -22,11 +22,11 @@ const Login = () => {
     }
 
     if (
-      (role === "Public" || role === "admin") &&
+      (role === "Public" || role === "admin" || role === "Volunteer") &&
       !email.endsWith("@gmail.com")
     ) {
       setLoading(false);
-      alert("Public/Admin must use @gmail.com");
+      alert("Public/Admin/Volunteer must use @gmail.com");
       return;
     }
 
@@ -51,8 +51,9 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("username", data.user.name);
+      localStorage.setItem("role", data.user.role || role);
 
-      navigate("/dashboard");
+      navigate(data.user.role === "Volunteer" ? "/viewcomplaints" : "/dashboard");
     } catch (err) {
       console.error("Login error:", err);
       setLoading(false);
@@ -111,6 +112,7 @@ const Login = () => {
               className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="Public">Public</option>
+              <option value="Volunteer">Volunteer</option>
               <option value="Government">Government</option>
               <option value="admin">Admin</option>
             </select>
