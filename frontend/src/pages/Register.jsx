@@ -30,10 +30,10 @@ const Register = () => {
     }
 
     if (
-      (form.role === "Public" || form.role === "admin") &&
+      (form.role === "Public" || form.role === "admin" || form.role === "Volunteer") &&
       !form.email.endsWith("@gmail.com")
     ) {
-      alert("Public or Admin users must use @gmail.com");
+      alert("Public, Admin, or Volunteer users must use @gmail.com");
       return;
     }
 
@@ -116,6 +116,7 @@ const Register = () => {
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
             >
               <option value="Public">Public</option>
+              <option value="Volunteer">Volunteer</option>
               <option value="government">Government</option>
               <option value="admin">Admin</option>
             </select>
