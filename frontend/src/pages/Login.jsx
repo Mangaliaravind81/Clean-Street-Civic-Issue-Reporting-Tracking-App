@@ -5,7 +5,7 @@ import Logo from "../assets/logo.png";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("Public");
+  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -15,14 +15,14 @@ const Login = () => {
     setLoading(true);
 
     // Role Email Validation
-    if (role === "Government" && !email.endsWith(".gov.in")) {
+    if (role === "volunteer" && !email.endsWith(".in")) {
       setLoading(false);
-      alert("Government users must use .gov.in email");
+      alert("Volunteer/Government users must use .in email");
       return;
     }
 
     if (
-      (role === "Public" || role === "admin") &&
+      (role === "user" || role === "admin") &&
       !email.endsWith("@gmail.com")
     ) {
       setLoading(false);
@@ -31,7 +31,7 @@ const Login = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/users/login", {
+      const res = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,6 +51,7 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("username", data.user.name);
+      localStorage.setItem("userRole", data.user.role);
 
       navigate("/dashboard");
     } catch (err) {
@@ -108,10 +109,10 @@ const Login = () => {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
             >
-              <option value="Public">Public</option>
-              <option value="Government">Government</option>
+              <option value="user">Public</option>
+              <option value="volunteer">Volunteer/Govt</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -119,7 +120,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition cursor-pointer"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

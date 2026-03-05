@@ -1,54 +1,34 @@
-const mongoose = require("mongoose");
+const { Schema, model } = require("mongoose");
 
-const ComplaintSchema = new mongoose.Schema({
-  title: String,
-  priority: String,
-  issueType: String,
+const ComplaintSchema = new Schema({
+  user_id: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  photo: [String],
+  location_coords: String,
   address: String,
-  description: String,
-  postedBy: {
-    type: mongoose.Schema.Types.ObjectId,
+  assigned_to: {
+    type: Schema.Types.ObjectId,
     ref: "User",
   },
-  latitude: String,
-  longitude: String,
-
-  images: [String],
-
-
   status: {
     type: String,
-    default: "Pending",
+    enum: ["received", "in_review", "resolved", "Pending"], // Kept 'Pending' if existing data/logic relies on it
+    default: "received",
   },
-
-
-  likes: {
-    type: Number,
-    default: 0,
-  },
-  unlikes: {
-    type: Number,
-    default: 0,
-  },
-
-  comments: [
-    {
-      text: String,
-      postedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  issue_type: String,
+  priority: String,
+  landmark: String,
+  rejected_by: [{
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  }],
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-module.exports = mongoose.model("Complaint", ComplaintSchema);
+module.exports = model("Complaint", ComplaintSchema);

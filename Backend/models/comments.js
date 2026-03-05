@@ -18,7 +18,7 @@ const commentSchema = new Schema(
       trim: true,
     },
   },
-  { timestamps: true },
+  { timestamps: { createdAt: 'timestamp', updatedAt: false } }
 );
 
 module.exports = model("Comment", commentSchema);

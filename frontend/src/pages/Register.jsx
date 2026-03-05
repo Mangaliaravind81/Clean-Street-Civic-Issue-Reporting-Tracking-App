@@ -10,7 +10,7 @@ const Register = () => {
     phone: "",
     password: "",
     confirmpassword: "",
-    role: "Public",
+    role: "user",
   });
 
   const [loading, setLoading] = useState(false);
@@ -24,16 +24,16 @@ const Register = () => {
     e.preventDefault();
 
     // ===== Role email validation =====
-    if (form.role === "government" && !form.email.endsWith(".in")) {
-      alert("Government users must use .in email");
+    if (form.role === "volunteer" && !form.email.endsWith(".in")) {
+      alert("Volunteer/Government users must use .in email");
       return;
     }
 
     if (
-      (form.role === "Public" || form.role === "admin") &&
+      (form.role === "user" || form.role === "admin") &&
       !form.email.endsWith("@gmail.com")
     ) {
-      alert("Public or Admin users must use @gmail.com");
+      alert("Public (user) or Admin users must use @gmail.com");
       return;
     }
 
@@ -45,7 +45,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/users/register", {
+      const res = await fetch("http://localhost:5000/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -113,10 +113,10 @@ const Register = () => {
             <select
               value={form.role}
               onChange={(e) => update("role", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 cursor-pointer"
             >
-              <option value="Public">Public</option>
-              <option value="government">Government</option>
+              <option value="user">Public</option>
+              <option value="volunteer">Volunteer/Govt</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -140,7 +140,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition cursor-pointer"
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>

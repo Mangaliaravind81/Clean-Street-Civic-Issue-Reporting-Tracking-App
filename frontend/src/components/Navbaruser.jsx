@@ -101,7 +101,7 @@
 
 // export default Navbaruser;
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Logo from "../assets/logo.png";
 
@@ -112,9 +112,15 @@ const linkClass = ({ isActive }) =>
 
 const Navbaruser = () => {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow">
+    <nav className="sticky top-0 z-[9999] bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <NavLink to="/dashboard" className="flex items-center gap-2">
@@ -128,21 +134,36 @@ const Navbaruser = () => {
             Dashboard
           </NavLink>
 
-          <NavLink to="/reportissue" className={linkClass}>
-            Report Issue
-          </NavLink>
+          {localStorage.getItem("userRole") !== "volunteer" && localStorage.getItem("userRole") !== "admin" && (
+            <NavLink to="/report-issue" className={linkClass}>
+              Report Issue
+            </NavLink>
+          )}
 
-          <NavLink to="/viewcomplaints" className={linkClass}>
+          <NavLink to="/view-complaints" className={linkClass}>
             View Complaints
           </NavLink>
 
           <NavLink to="/profile" className={linkClass}>
             Profile
           </NavLink>
+
+          {localStorage.getItem("userRole") === "admin" && (
+            <NavLink to="/admin-dashboard" className={linkClass}>
+              Admin
+            </NavLink>
+          )}
+
+          <button
+            onClick={handleLogout}
+            className="text-gray-600 hover:text-red-600 font-medium transition-colors cursor-pointer"
+          >
+            Sign Out
+          </button>
         </div>
 
         {/* Mobile Button */}
-        <button onClick={() => setOpen(!open)} className="md:hidden text-2xl">
+        <button onClick={() => setOpen(!open)} className="md:hidden text-2xl cursor-pointer">
           ☰
         </button>
       </div>
@@ -153,21 +174,36 @@ const Navbaruser = () => {
           <NavLink to="/dashboard" onClick={() => setOpen(false)}>
             Dashboard
           </NavLink>
-          <NavLink to="/login" onClick={() => setOpen(false)}>
-            Sign In
-          </NavLink>
 
-          <NavLink to="/reportissue" onClick={() => setOpen(false)}>
-            Report Issue
-          </NavLink>
+          {localStorage.getItem("userRole") !== "volunteer" && localStorage.getItem("userRole") !== "admin" && (
+            <NavLink to="/report-issue" onClick={() => setOpen(false)}>
+              Report Issue
+            </NavLink>
+          )}
 
-          <NavLink to="/viewcomplaints" onClick={() => setOpen(false)}>
+          <NavLink to="/view-complaints" onClick={() => setOpen(false)}>
             View Complaints
           </NavLink>
 
           <NavLink to="/profile" onClick={() => setOpen(false)}>
             Profile
           </NavLink>
+
+          {localStorage.getItem("userRole") === "admin" && (
+            <NavLink to="/admin-dashboard" onClick={() => setOpen(false)}>
+              Admin
+            </NavLink>
+          )}
+
+          <button
+            onClick={() => {
+              handleLogout();
+              setOpen(false);
+            }}
+            className="text-left py-2 text-red-600 font-bold border-t border-gray-100 mt-2 "
+          >
+            Sign Out
+          </button>
         </div>
       )}
     </nav>
