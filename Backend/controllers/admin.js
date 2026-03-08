@@ -1,3 +1,4 @@
+// admin controller updated
 const Complaint = require("../models/complaint");
 const User = require("../models/user");
 const AdminLog = require("../models/adminlog");
