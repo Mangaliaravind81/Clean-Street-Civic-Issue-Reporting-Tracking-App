@@ -1,6 +1,7 @@
 const Complaint = require("../models/complaint");
 const AdminLog = require("../models/adminlog");
 const User = require("../models/user");
+const Notification = require("../models/notification");
 
 exports.createComplaint = async (req, res) => {
   try {
@@ -47,6 +48,40 @@ exports.createComplaint = async (req, res) => {
 
     console.log("Complaint created successfully:", complaint._id);
 
+    // Identify nearby volunteers and notify them
+    if (location_coords) {
+      try {
+        const [cLat, cLng] = location_coords.split(",").map(Number);
+        const volunteers = await User.find({ role: "volunteer" });
+        
+        const calculateDistance = (lat1, lon1, lat2, lon2) => {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * (Math.PI / 180);
+          const dLon = (lon2 - lon1) * (Math.PI / 180);
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        };
+
+        const nearbyVolunteers = volunteers.filter(v => {
+          if (!v.location_coords) return false;
+          const [vLat, vLng] = v.location_coords.split(",").map(Number);
+          return calculateDistance(cLat, cLng, vLat, vLng) <= 20;
+        });
+
+        if (nearbyVolunteers.length > 0) {
+          const notifications = nearbyVolunteers.map(v => ({
+            user_id: v._id,
+            complaint_id: complaint._id,
+            message: `New issue reported nearby: "${complaint.title}". Please accept it if you are available.`,
+          }));
+          await Notification.insertMany(notifications);
+        }
+      } catch (err) {
+        console.error("Error notifying nearby volunteers:", err);
+      }
+    }
+
     res.status(201).json({
       success: true,
       complaint,
@@ -65,6 +100,7 @@ exports.getComplaints = async (req, res) => {
     const complaints = await Complaint.find()
       .populate("user_id", "name email profile_photo")
       .populate("assigned_to", "name email")
+      .populate("assigned_by", "name email")
       .populate("rejected_by", "name")
       .sort({ created_at: -1 })
       .lean();
@@ -107,6 +143,7 @@ exports.getComplaintById = async (req, res) => {
     const complaint = await Complaint.findById(req.params.id)
       .populate("user_id", "name email profile_photo")
       .populate("assigned_to", "name email")
+      .populate("assigned_by", "name email")
       .populate("rejected_by", "name");
     if (!complaint)
       return res
@@ -194,6 +231,24 @@ exports.updateComplaintStatus = async (req, res) => {
         action: `Updated status for "${complaint.title}" to ${status.toUpperCase()}`,
         user_id: req.user.id,
       });
+
+      // Notify the user (owner)
+      if (complaint.user_id.toString() !== req.user.id) {
+        await Notification.create({
+          user_id: complaint.user_id,
+          complaint_id: complaint._id,
+          message: `Your complaint "${complaint.title}" status has been updated to ${status.toUpperCase()}.`,
+        });
+      }
+
+      // Notify the volunteer (if admin performed the update)
+      if (req.user.role === "admin" && complaint.assigned_to && complaint.assigned_to.toString() !== req.user.id) {
+        await Notification.create({
+          user_id: complaint.assigned_to,
+          complaint_id: complaint._id,
+          message: `The status of assignment "${complaint.title}" has been updated to ${status.toUpperCase()} by Admin.`,
+        });
+      }
     }
 
     res.json({ success: true, complaint });
@@ -259,9 +314,13 @@ exports.assignComplaint = async (req, res) => {
 
     const updatedComplaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      { assigned_to: volunteer_id, status: "in_review" },
+      { 
+        assigned_to: volunteer_id, 
+        assigned_by: req.user.id,
+        status: "in_review" 
+      },
       { new: true },
-    ).populate("assigned_to", "name email");
+    ).populate("assigned_to", "name email").populate("assigned_by", "name email");
 
     if (!updatedComplaint)
       return res
@@ -273,6 +332,30 @@ exports.assignComplaint = async (req, res) => {
         action: `Assigned "${updatedComplaint.title}" to ${updatedComplaint.assigned_to?.name || "Volunteer"}`,
         user_id: req.user.id,
       });
+
+      // Notify the user (owner)
+      if (updatedComplaint.user_id.toString() !== req.user.id) {
+        let message = `Your complaint "${updatedComplaint.title}" is now IN REVIEW.`;
+        if (req.user.role === "admin") {
+          message = `Admin has assigned volunteer ${updatedComplaint.assigned_to.name} to your complaint "${updatedComplaint.title}".`;
+        } else {
+          message = `Volunteer ${updatedComplaint.assigned_to.name} has been assigned to your complaint "${updatedComplaint.title}".`;
+        }
+        await Notification.create({
+          user_id: updatedComplaint.user_id,
+          complaint_id: updatedComplaint._id,
+          message: message,
+        });
+      }
+
+      // Notify the volunteer (unless they assigned it to themselves)
+      if (volunteer_id !== req.user.id) {
+        await Notification.create({
+          user_id: volunteer_id,
+          complaint_id: updatedComplaint._id,
+          message: `You have been assigned to handle issue: "${updatedComplaint.title}".`,
+        });
+      }
     }
 
     res.json({ success: true, complaint: updatedComplaint });
@@ -293,6 +376,44 @@ exports.rejectComplaint = async (req, res) => {
       return res.status(404).json({ success: false, message: "Complaint not found" });
 
     res.json({ success: true, complaint });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.escalateComplaint = async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) {
+       return res.status(404).json({ success: false, message: "Complaint not found" });
+    }
+
+    if (complaint.user_id.toString() !== req.user.id) {
+       return res.status(403).json({ success: false, message: "Only the reporter can escalate this complaint." });
+    }
+    
+    if (complaint.status === "resolved") {
+       return res.status(400).json({ success: false, message: "Cannot escalate a resolved complaint." });
+    }
+    
+    if (complaint.escalation_level === "admin") {
+       return res.status(400).json({ success: false, message: "Complaint is already escalated to admin." });
+    }
+
+    complaint.escalation_level = "admin";
+    await complaint.save();
+
+    const admins = await User.find({ role: "admin" });
+    if (admins.length > 0) {
+      const notifications = admins.map(a => ({
+        user_id: a._id,
+        complaint_id: complaint._id,
+        message: `Complaint "${complaint.title}" has been escalated to admin by the user due to inaction.`,
+      }));
+      await Notification.insertMany(notifications);
+    }
+
+    res.json({ success: true, message: "Complaint escalated to admin successfully." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

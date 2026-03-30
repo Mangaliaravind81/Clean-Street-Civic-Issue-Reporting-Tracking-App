@@ -9,6 +9,8 @@ const linkClass = ({ isActive }) =>
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("userRole");
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow">
@@ -29,20 +31,31 @@ const Navbar = () => {
             Features
           </NavLink> */}
 
-          <NavLink to="/login" className={linkClass}>
-            Sign In
-          </NavLink>
+          {token ? (
+            <NavLink
+              to={userRole === "admin" ? "/admin-dashboard" : "/dashboard"}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg"
+            >
+              Dashboard
+            </NavLink>
+          ) : (
+            <>
+              <NavLink to="/login" className={linkClass}>
+                Sign In
+              </NavLink>
 
-          <NavLink
-            to="/register"
-            className={({ isActive }) =>
-              isActive
-                ? "bg-green-600 text-white px-4 py-2 rounded-lg"
-                : "bg-green-600 text-white  px-4 py-2 rounded-lg"
-            }
-          >
-            SIGN UP
-          </NavLink>
+              <NavLink
+                to="/register"
+                className={({ isActive }) =>
+                  isActive
+                    ? "bg-green-600 text-white px-4 py-2 rounded-lg"
+                    : "bg-green-600 text-white px-4 py-2 rounded-lg"
+                }
+              >
+                SIGN UP
+              </NavLink>
+            </>
+          )}
         </div>
 
         {/* Mobile Button */}
@@ -66,17 +79,29 @@ const Navbar = () => {
             How It Works
           </a> */}
 
-          <NavLink to="/login" onClick={() => setOpen(false)}>
-            Sign In
-          </NavLink>
+          {token ? (
+            <NavLink 
+              to={userRole === "admin" ? "/admin-dashboard" : "/dashboard"} 
+              onClick={() => setOpen(false)}
+              className="bg-green-600 text-white text-center py-2 rounded"
+            >
+              Dashboard
+            </NavLink>
+          ) : (
+            <>
+              <NavLink to="/login" onClick={() => setOpen(false)}>
+                Sign In
+              </NavLink>
 
-          <NavLink
-            to="/register"
-            onClick={() => setOpen(false)}
-            className="bg-green-600 text-white text-center py-2 rounded"
-          >
-            SIGN UP
-          </NavLink>
+              <NavLink
+                to="/register"
+                onClick={() => setOpen(false)}
+                className="bg-green-600 text-white text-center py-2 rounded"
+              >
+                SIGN UP
+              </NavLink>
+            </>
+          )}
         </div>
       )}
     </nav>

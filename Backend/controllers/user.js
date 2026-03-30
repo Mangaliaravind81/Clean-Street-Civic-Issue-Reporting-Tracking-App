@@ -87,14 +87,26 @@ module.exports.getUserProfile = async (req, res) => {
 
 module.exports.updateUserProfile = async (req, res) => {
   try {
-    const { name, location, profile_photo, phone_number, bio, location_coords } = req.body;
+    const { name, location, profile_photo, phone_number, bio, location_coords, role } = req.body;
+    
+    let oldUser = null;
+    if (role) oldUser = await User.findById(req.params.id);
+    
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { name, location, profile_photo, phone_number, bio, location_coords },
+      { name, location, profile_photo, phone_number, bio, location_coords, role },
       { new: true, runValidators: true }
     ).select("-password");
 
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (role && oldUser && oldUser.role !== role) {
+      const Notification = require("../models/notification");
+      await Notification.create({
+        user_id: user._id,
+        message: `Admin has changed your role to ${role.toUpperCase()}.`
+      });
+    }
 
     res.status(200).json({ success: true, message: "Profile updated successfully", user });
   } catch (error) {
@@ -140,11 +152,12 @@ module.exports.changePassword = async (req, res) => {
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) return res.status(401).json({ success: false, message: "Current password incorrect" });
 
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
     res.json({ success: true, message: "Password updated successfully" });
   } catch (error) {
+    console.error("Change Password Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

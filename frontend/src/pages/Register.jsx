@@ -80,7 +80,6 @@ const Register = () => {
               Clean Street
             </span>
           </Link>
-
           <h2 className="text-xl font-bold mt-2">Create your account</h2>
           <p className="text-gray-500 text-sm">Join the civic community</p>
         </div>
@@ -107,7 +106,6 @@ const Register = () => {
             value={form.phone}
             onChange={(e) => update("phone", e.target.value)}
           />
-
           <div>
             <label className="block text-sm mb-1">Select Role</label>
             <select
@@ -159,7 +157,6 @@ const Register = () => {
     </div>
   );
 };
-
 const Input = ({ label, placeholder, type = "text", value, onChange }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm">{label}</label>

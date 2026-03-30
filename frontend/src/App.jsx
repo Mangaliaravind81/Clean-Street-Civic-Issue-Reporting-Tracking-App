@@ -10,6 +10,8 @@ import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageComplaints from "./pages/ManageComplaints";
 import ZoneManagement from "./pages/ZoneManagement";
+import Feedback from "./pages/Feedback";
+import AdminFeedbacks from "./pages/AdminFeedbacks";
 
 function App() {
   return (
@@ -21,8 +23,10 @@ function App() {
       <Route path="/report-issue" element={<Reportissue />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/view-complaints" element={<Viewcomplaints />} />
+      <Route path="/feedback" element={<Feedback />} />
       <Route path="/user-management" element={<UserManagement />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/admin-feedbacks" element={<AdminFeedbacks />} />
       <Route path="/manage-complaints" element={<ManageComplaints />} />
       <Route path="/zone-management" element={<ZoneManagement />} />
     </Routes>

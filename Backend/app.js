@@ -2,12 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-
 const authRoutes = require("./routes/auth");
 const complaintRoutes = require("./routes/complaints");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const zoneRoutes = require("./routes/zone");
+const notificationRoutes = require("./routes/notification");
+const feedbackRoutes = require("./routes/feedback");
 
 const app = express();
 
@@ -25,5 +26,7 @@ app.use("/users", userRoutes);
 app.use("/complaints", complaintRoutes);
 app.use("/admin", adminRoutes);
 app.use("/zones", zoneRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/feedbacks", feedbackRoutes);
 
 app.listen(5000, () => console.log("Server running on 5000"));

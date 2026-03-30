@@ -150,9 +150,14 @@ const Dashboard = () => {
                           </span>
                         </td>
                         <td className="px-6 py-5">
-                          <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm border ${getStatusStyles(issue.status)}`}>
-                            {issue.status}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm border w-fit ${getStatusStyles(issue.status)}`}>
+                              {issue.status}
+                            </span>
+                            {userRole === "volunteer" && issue.assigned_by && issue.assigned_by.role === "admin" && (
+                              <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">Admin Assigned</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-5 text-right text-sm text-gray-400 font-medium hidden md:table-cell">
                           {new Date(issue.created_at).toLocaleDateString()}
