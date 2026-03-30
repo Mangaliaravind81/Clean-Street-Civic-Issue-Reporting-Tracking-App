@@ -1,0 +1,69 @@
+﻿commit 424b0fc782cff3a5d28afb79ec4c0e95e4c33293
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Mon Mar 30 22:21:07 2026 +0530
+
+    volunteer-login page added
+
+commit f830e261043ebef32562637420edd9909cd320bb
+Merge: ca46713 541c41b
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Thu Mar 5 20:04:13 2026 +0530
+
+    code uploaded
+
+commit ca467134d1261ea83d17f51e92d0b35bbbcea811
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Thu Mar 5 19:49:30 2026 +0530
+
+    updataed
+
+commit 541c41b834d08a36a86f3412eed9e6d03db28b7c
+Author: Himanshi <hhimakavimehra2016@gmail.com>
+Date:   Sun Mar 1 17:26:16 2026 +0530
+
+    Remove project run instructions from README
+    
+    Removed instructions on how to run the project locally.
+
+commit 46094b6faec10568094b2f29b48d93fd871b0068
+Author: Himanshi <hhimakavimehra2016@gmail.com>
+Date:   Sun Mar 1 17:21:30 2026 +0530
+
+    Refactor README sections for better organization
+    
+    Updated formatting and structure for clarity.
+
+commit 1a31d7cbfe01a867623163231ecf1d8cd6751e53
+Author: Himanshi <hhimakavimehra2016@gmail.com>
+Date:   Sun Mar 1 17:20:02 2026 +0530
+
+    Add project setup instructions to README
+    
+    Added detailed instructions for running the project locally, including backend and frontend setup steps.
+
+commit 3e902619409ce9f61abc924dc1b53f459410678e
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Sat Feb 28 21:07:50 2026 +0530
+
+    Delete Backend/node_modules directory
+
+commit 9e24ec35fd7121b2cfba9ef86048d229e3025d01
+Merge: 2ac5fa7 787c827
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Sat Feb 28 19:24:55 2026 +0530
+
+    Merge pull request #2 from Mangaliaravind81/Display-complaints
+    
+    Display complaints page added
+
+commit 787c82722e6f195db4f66e541fd0cda6ea17f9d5
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Sat Feb 28 19:23:30 2026 +0530
+
+    Display complaints page added
+
+commit 2ac5fa7d8d994dbf8261e176519631c5eb7ced0a
+Author: Mangaliaravind81 <shriramulaaravind@gmail.com>
+Date:   Wed Feb 25 19:08:52 2026 +0530
+
+    Delete Backend/.env
