@@ -52,6 +52,23 @@ exports.getAnalytics = async (req, res) => {
       statusDistribution: await Complaint.aggregate([
         { $group: { _id: "$status", count: { $sum: 1 } } }
       ]),
+      roleDistribution: await User.aggregate([
+        { $group: { _id: "$role", count: { $sum: 1 } } }
+      ]),
+      complaintsPerMonth: await Complaint.aggregate([
+        {
+          $group: {
+            _id: {
+              year: { $year: "$created_at" },
+              month: { $month: "$created_at" }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { "_id.year": -1, "_id.month": -1 } },
+        { $limit: 6 },
+        { $sort: { "_id.year": 1, "_id.month": 1 } }
+      ]),
       recentLogs,
     });
   } catch (error) {

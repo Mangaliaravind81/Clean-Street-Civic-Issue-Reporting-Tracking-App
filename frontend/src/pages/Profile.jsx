@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Navbaruser from "../components/Navbaruser";
 import { 
@@ -18,7 +18,8 @@ import {
   FaShieldAlt,
   FaKey,
   FaEye,
-  FaEyeSlash
+  FaEyeSlash,
+  FaTrash
 } from "react-icons/fa";
 import { MdOutlineNotes } from "react-icons/md";
 import MapComponent from "../components/MapComponent";
@@ -40,6 +41,12 @@ const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passData, setPassData] = useState({ current: "", new: "", confirm: "" });
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
+  const [fullScreenImage, setFullScreenImage] = useState(null);
+  const [account, setAccount] = useState(false);
+  const fileInputRef = useRef(null);
 
   const userId = localStorage.getItem("userId");
 
@@ -74,11 +81,29 @@ const Profile = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.patch(`http://localhost:5000/users/${userId}`, formData, {
+      
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("phone_number", formData.phone_number);
+      data.append("location", formData.location);
+      data.append("bio", formData.bio);
+      if (formData.location_coords) {
+        data.append("location_coords", formData.location_coords);
+      }
+      if (photoFile) {
+        data.append("profile_photo", photoFile);
+      } else if (removePhoto) {
+        data.append("profile_photo", "");
+      }
+
+      const res = await axios.patch(`http://localhost:5000/users/${userId}`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(res.data.user);
       setIsEditing(false);
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      setRemovePhoto(false);
       alert("Profile updated successfully!");
     } catch (err) {
       alert("Failed to update profile");
@@ -122,25 +147,65 @@ const Profile = () => {
     <div className="min-h-screen bg-[#F8FAFC]">
       <Navbaruser />
 
-      <main className="container mx-auto px-4 py-8 lg:py-16 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 lg:py-8 max-w-6xl">
         <header className="mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit profile</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">User profile</h1>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Sidebar Card */}
           <div className="lg:col-span-4 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm flex flex-col items-center text-center">
              <div className="relative mb-6">
-                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-3xl font-bold border-4 border-white shadow-md overflow-hidden">
-                   {user?.profile_photo ? (
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  hidden 
+                  ref={fileInputRef} 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setPhotoFile(file);
+                      setPhotoPreview(URL.createObjectURL(file));
+                      setIsEditing(true);
+                    }
+                  }} 
+                />
+                <div 
+                   className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-3xl font-bold border-4 border-white shadow-md overflow-hidden cursor-pointer"
+                   onClick={() => {
+                     if (photoPreview) setFullScreenImage(photoPreview);
+                     else if (user?.profile_photo && !removePhoto) setFullScreenImage(user.profile_photo);
+                   }}
+                >
+                   {photoPreview ? (
+                     <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                   ) : user?.profile_photo && !removePhoto ? (
                      <img src={user.profile_photo} alt="Avatar" className="w-full h-full object-cover" />
                    ) : (
                      getInitials(user?.name)
                    )}
                 </div>
-                <button className="absolute bottom-1 right-1 p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-400 hover:text-blue-600 transition-colors cursor-pointer">
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-1 right-1 p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
+                  title="Change Photo"
+                >
                   <FaCamera size={14} />
                 </button>
+                {(photoPreview || (user?.profile_photo && !removePhoto)) && (
+                   <button 
+                     onClick={() => {
+                       setPhotoFile(null);
+                       setPhotoPreview(null);
+                       setRemovePhoto(true);
+                       setIsEditing(true);
+                     }}
+                     className="absolute bottom-1 left-1 p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                     title="Remove Photo"
+                   >
+                     <FaTrash size={14} />
+                   </button>
+                )}
              </div>
 
              <h2 className="text-2xl font-bold text-gray-900 mb-1">{user?.name}</h2>
@@ -188,7 +253,12 @@ const Profile = () => {
                     <FaSave /> Save
                   </button>
                   <button 
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => {
+                      setIsEditing(false);
+                      setPhotoFile(null);
+                      setPhotoPreview(null);
+                      setRemovePhoto(false);
+                    }}
                     className="flex items-center gap-2 px-5 py-2.5 border border-gray-200 rounded-xl text-gray-400 font-bold text-sm hover:bg-gray-50 transition-colors cursor-pointer"
                   >
                     <FaTimes /> Cancel
@@ -358,13 +428,16 @@ const Profile = () => {
                         <FaLock className="text-gray-400 group-hover:text-blue-600" />
                         Change Password
                     </button>
-                    <button className="flex items-center justify-center gap-2 px-6 py-4 border border-gray-100 rounded-2xl text-gray-700 font-bold hover:bg-gray-50 transition-all shadow-sm group cursor-pointer">
+                    <button 
+                    onClick={() => setAccount(true)}
+                    className="flex items-center justify-center gap-2 px-6 py-4 border border-gray-100 rounded-2xl text-gray-700 font-bold hover:bg-gray-50 transition-all shadow-sm group cursor-pointer">
                         <FaShieldAlt className="text-gray-400 group-hover:text-blue-600" />
                         Account Privacy
                     </button>
                 </div>
             </div>
-
+            {/* setAccountPrivacy */}
+            
             {/* PASSWORD MODAL */}
             {showPasswordModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
@@ -455,6 +528,75 @@ const Profile = () => {
           </div>
         </div>
       </main>
+
+      {/* ACCOUNT PRIVACY MODAL */}
+      {account && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 text-left">
+            <div className="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative">
+                <div className="mb-6">
+                    <h3 className="text-2xl font-black text-gray-900 mb-1">Account Privacy</h3>
+                    <p className="text-gray-400 text-sm font-medium italic">Your data and visibility overview</p>
+                </div>
+
+                <div className="space-y-5">
+                    <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <div className="flex items-center gap-3 mb-3">
+                            <FaShieldAlt className="text-blue-600" size={18} />
+                            <h4 className="font-bold text-gray-900 text-sm">Data Visibility</h4>
+                        </div>
+                        <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                            Your email address and phone number are completely hidden from the public. They are only accessible to administrators to help verify your identity.
+                        </p>
+                    </div>
+
+                    <div className="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                        <div className="flex items-center gap-3 mb-3">
+                            <FaMapMarkerAlt className="text-emerald-600" size={18} />
+                            <h4 className="font-bold text-gray-900 text-sm">Location Services</h4>
+                        </div>
+                        <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                            Your location is never tracked in the background. Geolocation is only captured exactly when you choose to report an issue or capture a proximity location.
+                        </p>
+                    </div>
+
+                    <div className="pt-2">
+                        <button 
+                            type="button"
+                            onClick={() => setAccount(false)}
+                            className="w-full px-4 py-3.5 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-all shadow-md cursor-pointer"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* IMAGE POPUP */}
+      {fullScreenImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10000] p-4 backdrop-blur-sm"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <div
+            className="bg-white p-2 rounded-2xl shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setFullScreenImage(null)}
+              className="absolute -top-12 right-0 text-white font-bold text-xl hover:text-gray-300 cursor-pointer"
+            >
+              Close ✕
+            </button>
+            <img
+              src={fullScreenImage}
+              alt="Full view"
+              className="max-w-full max-h-[80vh] rounded-xl object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

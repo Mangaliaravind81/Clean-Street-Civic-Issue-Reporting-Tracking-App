@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbaruser from "../components/Navbaruser";
 import axios from "axios";
 import { FaUserShield, FaUserEdit, FaTrashAlt, FaSearch, FaUserTag } from "react-icons/fa";
+import AdminSidebar from "../components/AdminSidebar";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -80,107 +81,110 @@ const UserManagement = () => {
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Navbaruser />
 
-      <main className="container mx-auto px-4 py-12 max-w-6xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-          <div>
-            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2 flex items-center gap-3">
-              <FaUserShield className="text-blue-600" />
-              User Management
-            </h1>
-            <p className="text-gray-500 font-medium">Manage permissions and moderate community members</p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-             <div className="relative group">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-              <input 
-                type="text"
-                placeholder="Search name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all w-full sm:w-64"
-              />
+      <div className="flex lg:h-[calc(100vh-64px)] overflow-hidden">
+        <AdminSidebar />
+        <main className="flex-1 p-8 lg:p-12 overflow-y-auto w-full">
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-10 gap-4">
+            <div>
+              <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2 flex items-center gap-3">
+                <FaUserShield className="text-blue-600" />
+                User Management
+              </h1>
+              <p className="text-gray-500 font-medium">Manage permissions and moderate community members</p>
             </div>
-            <select 
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="bg-white border border-gray-200 px-4 py-3 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
-            >
-              <option value="All">All Roles</option>
-              <option value="user">Citizen</option>
-              <option value="volunteer">Volunteer</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Member</th>
-                  <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Role</th>
-                  <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredUsers.map((u) => (
-                  <tr key={u._id} className="hover:bg-blue-50/30 transition-colors group">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg shadow-inner">
-                          {u.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-800">{u.name}</p>
-                          <p className="text-sm text-gray-400 font-medium">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <select 
-                        value={u.role}
-                        onChange={(e) => handleUpdateRole(u._id, e.target.value)}
-                        className={`text-xs font-bold px-3 py-2 rounded-xl outline-none border-2 transition-all ${
-                          u.role === 'admin' ? 'bg-purple-50 border-purple-100 text-purple-600' : 
-                          u.role === 'volunteer' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
-                          'bg-blue-50 border-blue-100 text-blue-600'
-                        }`}
-                      >
-                        <option value="user">CITIZEN</option>
-                        <option value="volunteer">VOLUNTEER</option>
-                        <option value="admin">ADMIN</option>
-                      </select>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button 
-                          onClick={() => handleDeleteUser(u._id)}
-                          className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                          title="Delete Account"
-                        >
-                          <FaTrashAlt />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {filteredUsers.length === 0 && (
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <FaSearch className="text-gray-200 text-3xl" />
+            <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+               <div className="relative group">
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                <input 
+                  type="text"
+                  placeholder="Search name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all w-full sm:w-64"
+                />
               </div>
-              <h3 className="font-bold text-gray-800 mb-1">No members found</h3>
-              <p className="text-gray-400 text-sm">Try adjusting your search or filters</p>
+              <select 
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="bg-white border border-gray-200 px-4 py-3 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+              >
+                <option value="All">All Roles</option>
+                <option value="user">Citizen</option>
+                <option value="volunteer">Volunteer</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
-          )}
-        </div>
-      </main>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Member</th>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Role</th>
+                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredUsers.map((u) => (
+                    <tr key={u._id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg shadow-inner">
+                            {u.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">{u.name}</p>
+                            <p className="text-sm text-gray-400 font-medium">{u.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <select 
+                          value={u.role}
+                          onChange={(e) => handleUpdateRole(u._id, e.target.value)}
+                          className={`text-xs font-bold px-3 py-2 rounded-xl outline-none border-2 transition-all ${
+                            u.role === 'admin' ? 'bg-purple-50 border-purple-100 text-purple-600' : 
+                            u.role === 'volunteer' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
+                            'bg-blue-50 border-blue-100 text-blue-600'
+                          }`}
+                        >
+                          <option value="user">CITIZEN</option>
+                          <option value="volunteer">VOLUNTEER</option>
+                          <option value="admin">ADMIN</option>
+                        </select>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <button 
+                            onClick={() => handleDeleteUser(u._id)}
+                            className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                            title="Delete Account"
+                          >
+                            <FaTrashAlt />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {filteredUsers.length === 0 && (
+              <div className="p-12 text-center">
+                <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <FaSearch className="text-gray-200 text-3xl" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-1">No members found</h3>
+                <p className="text-gray-400 text-sm">Try adjusting your search or filters</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

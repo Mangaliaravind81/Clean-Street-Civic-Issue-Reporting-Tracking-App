@@ -50,6 +50,7 @@ router
   .delete(auth, complaintController.deleteComplaint);
 
 router.patch("/:id/reject", auth, complaintController.rejectComplaint);
+router.post("/:id/escalate", auth, complaintController.escalateComplaint);
 
 // Nested resources
 // POST /complaints/:id/votes

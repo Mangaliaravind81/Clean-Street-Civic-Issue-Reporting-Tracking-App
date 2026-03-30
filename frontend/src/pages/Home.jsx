@@ -1,5 +1,4 @@
 
-
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import hero from "../assets/hero.jpg";
@@ -7,11 +6,9 @@ import garbage from "../assets/garbage.jpg";
 import pothole from "../assets/pothole.jpg";
 import streetlight from "../assets/streetlight.jpg";
 import water from "../assets/water.jpg";
-
 import report from "../assets/report.png";
 import track from "../assets/track.png";
 import community from "../assets/community.png";
-
 import { NavLink } from "react-router-dom";
 
 function Home() {

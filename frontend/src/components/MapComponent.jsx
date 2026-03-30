@@ -37,11 +37,10 @@ function Recenter({ coords }) {
 
   return null;
 }
-
 export default function MapComponent({ onLocationChange }) {
   const [coords, setCoords] = useState(null);
   const [userCoords, setUserCoords] = useState(null);
-
+  
   // INITIAL USER LOCATION
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((pos) => {
@@ -76,7 +75,7 @@ export default function MapComponent({ onLocationChange }) {
 
         {/* MARKER */}
         <Marker position={[coords.lat, coords.lng]} />
-
+   
         <Recenter coords={coords} />
       </MapContainer>
 

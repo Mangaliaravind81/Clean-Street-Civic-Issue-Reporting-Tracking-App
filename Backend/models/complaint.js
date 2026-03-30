@@ -15,6 +15,10 @@ const ComplaintSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
+  assigned_by: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
   status: {
     type: String,
     enum: ["received", "in_review", "resolved", "Pending"], // Kept 'Pending' if existing data/logic relies on it
@@ -27,6 +31,11 @@ const ComplaintSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   }],
+  escalation_level: {
+    type: String,
+    enum: ["none", "volunteers", "admin"],
+    default: "none",
+  },
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
