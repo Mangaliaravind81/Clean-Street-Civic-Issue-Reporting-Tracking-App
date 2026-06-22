@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/cleanstreet")
+  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/cleanstreet")
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 

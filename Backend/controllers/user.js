@@ -25,9 +25,12 @@ module.exports.registerUser = async (req, res) => {
       profile_photo,
     });
 
+    const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET || "secret123", { expiresIn: "1d" });
+
     res.status(201).json({ 
       success: true, 
       message: "Registered successfully", 
+      token,
       user: { 
         id: newUser._id, 
         name: newUser.name, 
@@ -87,14 +90,19 @@ module.exports.getUserProfile = async (req, res) => {
 
 module.exports.updateUserProfile = async (req, res) => {
   try {
-    const { name, location, profile_photo, phone_number, bio, location_coords, role } = req.body;
+    const { name, username, location, profile_photo, phone_number, bio, location_coords, role } = req.body;
     
+    if (username) {
+      const existing = await User.findOne({ username, _id: { $ne: req.params.id } });
+      if (existing) return res.status(400).json({ success: false, message: "Username already taken" });
+    }
+
     let oldUser = null;
     if (role) oldUser = await User.findById(req.params.id);
     
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { name, location, profile_photo, phone_number, bio, location_coords, role },
+      { name, username, location, profile_photo, phone_number, bio, location_coords, role },
       { new: true, runValidators: true }
     ).select("-password");
 
@@ -136,7 +144,7 @@ module.exports.deleteUser = async (req, res) => {
 
 module.exports.getVolunteers = async (req, res) => {
   try {
-    const volunteers = await User.find({ role: "volunteer" }).select("name email _id");
+    const volunteers = await User.find({ role: "volunteer" }).select("name email phone_number profile_photo _id location location_coords");
     res.json({ success: true, volunteers });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

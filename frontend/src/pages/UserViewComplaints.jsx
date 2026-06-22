@@ -27,7 +27,8 @@ const UserViewComplaints = () => {
 
   const fetchComplaints = async () => {
     const res = await axios.get("http://localhost:5000/complaints");
-    setComplaints(res.data.complaints || []);
+    const validComplaints = (res.data.complaints || []).filter(c => c.user_id);
+    setComplaints(validComplaints);
   };
 
   const [staffLocation, setStaffLocation] = useState(null);
@@ -49,8 +50,27 @@ const UserViewComplaints = () => {
         console.error("Volunteers fetch failed", err);
       }
 
-      // 1. Try real-time browser geolocation first
-      if (navigator.geolocation) {
+      // 1. Try to get profile location first
+      let hasProfileLocation = false;
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+      if (token && userId) {
+        try {
+          const uRes = await axios.get(`http://localhost:5000/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (uRes.data.user.location_coords) {
+             const [lat, lng] = uRes.data.user.location_coords.split(",").map(Number);
+             setStaffLocation({ lat, lng });
+             hasProfileLocation = true;
+          }
+        } catch (e) {
+          console.error("Profile location fetch failed", e);
+        }
+      }
+
+      // 2. Fallback to real-time browser geolocation if no profile location
+      if (!hasProfileLocation && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             console.log("Real-time location found");
@@ -59,24 +79,8 @@ const UserViewComplaints = () => {
               lng: pos.coords.longitude
             });
           },
-          async (err) => {
-            console.warn("Geolocation failed, using profile fallback:", err.message);
-            // 2. Fallback to Profile location if denied/unavailable
-            const token = localStorage.getItem("token");
-            const userId = localStorage.getItem("userId");
-            if (token && userId) {
-              try {
-                const uRes = await axios.get(`http://localhost:5000/users/${userId}`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-                if (uRes.data.user.location_coords) {
-                   const [lat, lng] = uRes.data.user.location_coords.split(",").map(Number);
-                   setStaffLocation({ lat, lng });
-                }
-              } catch (e) {
-                console.error("Profile location fetch failed", e);
-              }
-            }
+          (err) => {
+            console.warn("Geolocation fallback failed:", err.message);
           }
         );
       }
@@ -140,6 +144,19 @@ const UserViewComplaints = () => {
     });
     setComment("");
     fetchComplaints();
+  };
+
+  const deleteComment = async (complaintId, commentId) => {
+    if (!window.confirm("Delete this comment?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/complaints/${complaintId}/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchComplaints();
+    } catch (err) {
+      alert("Failed to delete comment");
+    }
   };
 
   const nextImage = (e) => {
@@ -441,7 +458,7 @@ const UserViewComplaints = () => {
               <div className="p-5 flex-grow relative">
                 <div className="absolute top-5 right-5">
                   <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(item.status)}`}>
-                    {item.status.replace('_', ' ')}
+                    {item.status.toLowerCase() === 'received' ? 'Pending' : item.status.replace('_', ' ')}
                   </div>
                 </div>
 
@@ -743,6 +760,13 @@ const UserViewComplaints = () => {
 
               {/* Right: Map Section */}
               <div className="w-full lg:w-1/2 h-[250px] lg:h-[350px] bg-slate-50 relative group/map overflow-hidden">
+                <a 
+                  href={`https://maps.google.com/maps?q=${selected.location_coords}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="absolute inset-0 z-10 w-full h-full cursor-pointer"
+                  title="Open in Google Maps"
+                ></a>
                 <iframe
                   width="100%"
                   height="100%"
@@ -762,7 +786,7 @@ const UserViewComplaints = () => {
                 <div className="mb-10 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex items-center gap-3 mb-6">
                     <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(selected.status)}`}>
-                      {selected.status.replace('_', ' ')}
+                      {selected.status.toLowerCase() === 'received' ? 'Pending' : selected.status.replace('_', ' ')}
                     </div>
                     <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
                       <FaCalendarAlt />
@@ -983,7 +1007,18 @@ const UserViewComplaints = () => {
                       <div key={c._id} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm relative group/msg">
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-black text-[10px] text-blue-600 uppercase tracking-widest">{c.user_id?.name || "Community Member"}</span>
-                          <span className="text-[9px] font-bold text-slate-300 uppercase">{new Date(c.timestamp).toLocaleDateString()}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[9px] font-bold text-slate-300 uppercase">{new Date(c.timestamp).toLocaleDateString()}</span>
+                            {(userId === c.user_id?._id || userRole === 'admin') && (
+                              <button 
+                                onClick={() => deleteComment(selected._id, c._id)}
+                                className="text-[10px] text-rose-500 hover:text-rose-700 cursor-pointer transition-colors relative z-10"
+                                title="Delete comment"
+                              >
+                                <MdOutlineDelete size={14} />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm text-slate-600 font-medium leading-relaxed">{c.content}</p>
                       </div>
@@ -1101,7 +1136,7 @@ const UserViewComplaints = () => {
             distance = calculateDistance(cLat, cLng, vLat, vLng);
           }
           return { ...v, distance };
-        }).sort((a, b) => a.distance - b.distance);
+        }).filter(v => v.distance <= 20).sort((a, b) => a.distance - b.distance);
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[10000] flex items-center justify-center p-4">
@@ -1130,8 +1165,9 @@ const UserViewComplaints = () => {
                              <p className="font-bold text-gray-800">{v.name}</p>
                              <div className="flex items-center gap-1.5 mt-0.5">
                                 <FaMapMarkerAlt className={v.distance < 5 ? "text-emerald-500" : "text-gray-400"} size={10} />
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                  {v.distance === Infinity ? "Location Unknown" : `${v.distance.toFixed(1)} km away`}
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[200px]">
+                                  {v.location ? `${v.location} ` : ""}
+                                  <span className={v.distance < 5 ? "text-emerald-400/70" : "text-gray-300"}>({v.distance === Infinity ? "Unknown" : `${v.distance.toFixed(1)} km`})</span>
                                 </p>
                              </div>
                           </div>

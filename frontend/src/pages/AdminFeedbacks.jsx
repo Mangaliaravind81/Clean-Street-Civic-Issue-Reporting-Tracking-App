@@ -92,12 +92,6 @@ const AdminFeedbacks = () => {
           >
             Application Feedbacks
           </button>
-          <button 
-            onClick={() => setActiveTab("faqs")}
-            className={`px-6 py-2.5 rounded-full font-bold transition cursor-pointer ${activeTab === "faqs" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
-          >
-            Manage FAQs
-          </button>
         </div>
 
         <div className="w-full">
@@ -120,7 +114,7 @@ const AdminFeedbacks = () => {
                         {/* Complaint Card */}
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-4 flex flex-col sm:flex-row gap-4">
                            {fb.complaint_id?.photo && fb.complaint_id.photo[0] && (
-                             <img src={`http://localhost:5000${fb.complaint_id.photo[0]}`} alt="Complaint" className="w-full sm:w-28 h-28 object-cover rounded-md flex-shrink-0" />
+                             <img src={fb.complaint_id.photo[0].startsWith('http') ? fb.complaint_id.photo[0] : `http://localhost:5000${fb.complaint_id.photo[0]}`} alt="Complaint" className="w-full sm:w-28 h-28 object-cover rounded-md flex-shrink-0" />
                            )}
                            <div className="flex-1">
                              <div className="flex justify-between items-start gap-2">
@@ -192,22 +186,7 @@ const AdminFeedbacks = () => {
             </section>
           )}
 
-          {/* FAQs Tab */}
-          {activeTab === "faqs" && (
-            <section className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                Frequently Asked Questions
-              </h2>
-              <div className="space-y-4">
-                 {faqs.map((faq, index) => (
-                   <div key={index} className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-colors">
-                     <h3 className="font-bold text-gray-900 mb-2">{faq.question}</h3>
-                     <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
-                   </div>
-                 ))}
-              </div>
-            </section>
-          )}
+
 
         </div>
       </div>

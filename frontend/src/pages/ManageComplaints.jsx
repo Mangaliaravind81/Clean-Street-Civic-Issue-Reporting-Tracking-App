@@ -252,7 +252,7 @@ const ManageComplaints = () => {
             distance = calculateDistance(cLat, cLng, vLat, vLng);
           }
           return { ...v, distance };
-        }).sort((a, b) => a.distance - b.distance);
+        }).filter(v => v.distance <= 20).sort((a, b) => a.distance - b.distance);
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[10000] flex items-center justify-center p-4">
@@ -274,15 +274,25 @@ const ManageComplaints = () => {
                   {sortedVolunteers.map(v => (
                     <div key={v._id} className="bg-white border border-gray-100 p-5 rounded-3xl flex items-center justify-between hover:border-blue-200 transition-all shadow-sm group">
                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-black text-lg shadow-inner">
-                             {v.name.charAt(0).toUpperCase()}
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-black text-lg shadow-inner overflow-hidden shrink-0">
+                             {v.profile_photo ? (
+                               <img src={v.profile_photo} alt={v.name} className="w-full h-full object-cover" />
+                             ) : (
+                               v.name?.charAt(0)?.toUpperCase() || 'V'
+                             )}
                           </div>
-                          <div>
-                             <p className="font-bold text-gray-800">{v.name}</p>
+                          <div className="min-w-0">
+                             <p className="font-bold text-gray-800 truncate">{v.name || 'Unknown Volunteer'}</p>
+                             {(v.email || v.phone_number) && (
+                               <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate max-w-[220px]">
+                                 {v.email} {v.email && v.phone_number && '|'} {v.phone_number}
+                               </p>
+                             )}
                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <FaMapMarkerAlt className={v.distance < 5 ? "text-emerald-500" : "text-gray-400"} size={10} />
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                  {v.distance === Infinity ? "Location Unknown" : `${v.distance.toFixed(1)} km away`}
+                                <FaMapMarkerAlt className={v.distance < 5 ? "text-emerald-500 shrink-0" : "text-gray-400 shrink-0"} size={10} />
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[200px]">
+                                  {v.location ? `${v.location} ` : ""}
+                                  <span className={v.distance < 5 ? "text-emerald-400/70" : "text-gray-300"}>({v.distance === Infinity ? "Unknown" : `${v.distance.toFixed(1)} km`})</span>
                                 </p>
                              </div>
                           </div>

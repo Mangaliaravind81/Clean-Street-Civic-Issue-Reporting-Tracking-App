@@ -112,9 +112,8 @@ const AdminDashboard = () => {
           </header>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
             <StatCard icon={<FaListUl className="text-blue-500" />} label="Total Reports" value={data?.metrics?.totalComplaints || 0} />
-            <StatCard icon={<FaClock className="text-amber-500" />} label="Active Queue" value={data?.metrics?.pendingComplaints || 0} />
             <StatCard icon={<FaUserFriends className="text-emerald-500" />} label="Community Size" value={data?.metrics?.totalUsers || 0} />
             <StatCard icon={<FaCheckCircle className="text-gray-900" />} label="Resolved Today" value={data?.metrics?.resolvedToday || 0} />
           </div>
