@@ -7,16 +7,21 @@ exports.addComment = async (req, res) => {
     const { user_id, content } = req.body;
 
     if (!user_id || !content) {
-      return res.status(400).json({ success: false, message: "user_id and content are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "user_id and content are required" });
     }
 
     const newComment = await Comment.create({
       user_id,
       complaint_id,
-      content
+      content,
     });
 
-    const populatedComment = await newComment.populate("user_id", "name profile_photo");
+    const populatedComment = await newComment.populate(
+      "user_id",
+      "name profile_photo",
+    );
 
     res.status(201).json({ success: true, comment: populatedComment });
   } catch (error) {
@@ -43,9 +48,11 @@ exports.deleteComment = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedComment = await Comment.findByIdAndDelete(id);
-    
+
     if (!deletedComment) {
-       return res.status(404).json({ success: false, message: "Comment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Comment not found" });
     }
 
     res.json({ success: true, message: "Comment deleted" });

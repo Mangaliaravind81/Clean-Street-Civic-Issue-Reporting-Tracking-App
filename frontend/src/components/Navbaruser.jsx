@@ -40,9 +40,13 @@ const Navbaruser = () => {
 
   const handleMarkRead = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/notifications/${id}/read`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      await axios.patch(
+        `http://localhost:5000/notifications/${id}/read`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
       fetchNotifications();
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -51,9 +55,13 @@ const Navbaruser = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      await axios.patch("http://localhost:5000/notifications/mark-all-read", {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      await axios.patch(
+        "http://localhost:5000/notifications/mark-all-read",
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
       fetchNotifications();
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
@@ -65,7 +73,7 @@ const Navbaruser = () => {
     navigate("/login");
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <nav className="sticky top-0 z-[9999] bg-white shadow">
@@ -82,11 +90,12 @@ const Navbaruser = () => {
             Dashboard
           </NavLink>
 
-          {localStorage.getItem("userRole") !== "volunteer" && localStorage.getItem("userRole") !== "admin" && (
-            <NavLink to="/report-issue" className={linkClass}>
-              Report Issue
-            </NavLink>
-          )}
+          {localStorage.getItem("userRole") !== "volunteer" &&
+            localStorage.getItem("userRole") !== "admin" && (
+              <NavLink to="/report-issue" className={linkClass}>
+                Report Issue
+              </NavLink>
+            )}
 
           <NavLink to="/view-complaints" className={linkClass}>
             View Complaints
@@ -137,7 +146,10 @@ const Navbaruser = () => {
         </div>
 
         {/* Mobile Button */}
-        <button onClick={() => setOpen(!open)} className="md:hidden text-2xl cursor-pointer">
+        <button
+          onClick={() => setOpen(!open)}
+          className="md:hidden text-2xl cursor-pointer"
+        >
           ☰
         </button>
       </div>
@@ -149,11 +161,12 @@ const Navbaruser = () => {
             Dashboard
           </NavLink>
 
-          {localStorage.getItem("userRole") !== "volunteer" && localStorage.getItem("userRole") !== "admin" && (
-            <NavLink to="/report-issue" onClick={() => setOpen(false)}>
-              Report Issue
-            </NavLink>
-          )}
+          {localStorage.getItem("userRole") !== "volunteer" &&
+            localStorage.getItem("userRole") !== "admin" && (
+              <NavLink to="/report-issue" onClick={() => setOpen(false)}>
+                Report Issue
+              </NavLink>
+            )}
 
           <NavLink to="/view-complaints" onClick={() => setOpen(false)}>
             View Complaints

@@ -33,7 +33,7 @@ async function testEscalation() {
     // 2. Mock a nearby volunteer
     await User.findOneAndUpdate(
       { role: "volunteer" },
-      { location_coords: "12.9800,77.6000" } // Within 20km
+      { location_coords: "12.9800,77.6000" }, // Within 20km
     );
 
     // 3. Test Escalation Level 1 (Volunteers)
@@ -41,10 +41,10 @@ async function testEscalation() {
     // logic from controller
     const [cLat, cLng] = staleComplaint.location_coords.split(",").map(Number);
     const volunteers = await User.find({ role: "volunteer" });
-    
-    // We'll use the logic directly here or we could hit the API. 
+
+    // We'll use the logic directly here or we could hit the API.
     // Since this is a unit-style test for logic:
-    const nearby = volunteers.filter(v => v.location_coords); 
+    const nearby = volunteers.filter((v) => v.location_coords);
     console.log(`Found ${nearby.length} volunteers with location.`);
 
     // 4. Test API flow (conceptual verification)
@@ -56,7 +56,7 @@ async function testEscalation() {
     console.log("Testing Escalation Level 2...");
     const admins = await User.find({ role: "admin" });
     console.log(`Found ${admins.length} admins to notify.`);
-    
+
     staleComplaint.escalation_level = "admin";
     await staleComplaint.save();
     console.log("Simulated Level 2 escalation.");

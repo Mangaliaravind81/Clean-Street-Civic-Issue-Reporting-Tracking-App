@@ -61,7 +61,7 @@ const Register = () => {
 
       if (data.success) {
         alert(data.message);
-        
+
         if (data.token) {
           localStorage.setItem("token", data.token);
           localStorage.setItem("userId", data.user.id);

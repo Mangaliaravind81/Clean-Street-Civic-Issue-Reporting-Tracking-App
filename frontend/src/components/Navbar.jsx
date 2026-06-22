@@ -80,8 +80,8 @@ const Navbar = () => {
           </a> */}
 
           {token ? (
-            <NavLink 
-              to={userRole === "admin" ? "/admin-dashboard" : "/dashboard"} 
+            <NavLink
+              to={userRole === "admin" ? "/admin-dashboard" : "/dashboard"}
               onClick={() => setOpen(false)}
               className="bg-green-600 text-white text-center py-2 rounded"
             >

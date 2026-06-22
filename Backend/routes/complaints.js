@@ -40,7 +40,14 @@ router
     if (req.body.volunteer_id) {
       return complaintController.assignComplaint(req, res);
     }
-    if (req.body.title || req.body.description || req.body.address || req.body.landmark || req.body.issue_type || req.body.priority) {
+    if (
+      req.body.title ||
+      req.body.description ||
+      req.body.address ||
+      req.body.landmark ||
+      req.body.issue_type ||
+      req.body.priority
+    ) {
       return complaintController.updateComplaint(req, res);
     }
     res
@@ -63,6 +70,10 @@ router.post("/:complaint_id/comments", auth, commentController.addComment);
 // GET /complaints/:id/comments
 router.get("/:complaint_id/comments", commentController.getComments);
 // DELETE /complaints/:complaint_id/comments/:id
-router.delete("/:complaint_id/comments/:id", auth, commentController.deleteComment);
+router.delete(
+  "/:complaint_id/comments/:id",
+  auth,
+  commentController.deleteComment,
+);
 
 module.exports = router;

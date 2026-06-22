@@ -8,6 +8,10 @@ router.get("/volunteer", auth, feedbackController.getVolunteerFeedbacks);
 router.get("/app", auth, feedbackController.getAppFeedbacks);
 router.get("/user", auth, feedbackController.getUserFeedbacks);
 router.get("/admin/app", auth, feedbackController.getAllAppFeedbacks);
-router.get("/admin/volunteer", auth, feedbackController.getAllVolunteerFeedbacks);
+router.get(
+  "/admin/volunteer",
+  auth,
+  feedbackController.getAllVolunteerFeedbacks,
+);
 
 module.exports = router;

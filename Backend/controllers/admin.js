@@ -7,26 +7,32 @@ exports.getAnalytics = async (req, res) => {
   try {
     // Basic metrics
     const totalComplaints = await Complaint.countDocuments();
-    const resolvedComplaints = await Complaint.countDocuments({ status: "resolved" });
-    const pendingComplaints = await Complaint.countDocuments({ status: "received" });
-    const inReviewComplaints = await Complaint.countDocuments({ status: "in_review" });
+    const resolvedComplaints = await Complaint.countDocuments({
+      status: "resolved",
+    });
+    const pendingComplaints = await Complaint.countDocuments({
+      status: "received",
+    });
+    const inReviewComplaints = await Complaint.countDocuments({
+      status: "in_review",
+    });
     const totalUsers = await User.countDocuments();
     const totalVolunteers = await User.countDocuments({ role: "volunteer" });
 
     // Time-based resolutions
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const resolvedToday = await Complaint.countDocuments({ 
-      status: "resolved", 
-      updated_at: { $gt: startOfDay } 
+    const resolvedToday = await Complaint.countDocuments({
+      status: "resolved",
+      updated_at: { $gt: startOfDay },
     });
 
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    const resolvedThisMonth = await Complaint.countDocuments({ 
-      status: "resolved", 
-      updated_at: { $gt: startOfMonth } 
+    const resolvedThisMonth = await Complaint.countDocuments({
+      status: "resolved",
+      updated_at: { $gt: startOfMonth },
     });
 
     // Recent Admin Logs
@@ -48,27 +54,27 @@ exports.getAnalytics = async (req, res) => {
         resolvedThisMonth,
       },
       categoryDistribution: await Complaint.aggregate([
-        { $group: { _id: "$issue_type", count: { $sum: 1 } } }
+        { $group: { _id: "$issue_type", count: { $sum: 1 } } },
       ]),
       statusDistribution: await Complaint.aggregate([
-        { $group: { _id: "$status", count: { $sum: 1 } } }
+        { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
       roleDistribution: await User.aggregate([
-        { $group: { _id: "$role", count: { $sum: 1 } } }
+        { $group: { _id: "$role", count: { $sum: 1 } } },
       ]),
       complaintsPerMonth: await Complaint.aggregate([
         {
           $group: {
             _id: {
               year: { $year: "$created_at" },
-              month: { $month: "$created_at" }
+              month: { $month: "$created_at" },
             },
-            count: { $sum: 1 }
-          }
+            count: { $sum: 1 },
+          },
         },
         { $sort: { "_id.year": -1, "_id.month": -1 } },
         { $limit: 6 },
-        { $sort: { "_id.year": 1, "_id.month": 1 } }
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
       ]),
       recentLogs,
     });

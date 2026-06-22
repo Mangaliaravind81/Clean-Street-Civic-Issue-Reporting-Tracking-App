@@ -1,10 +1,16 @@
 import React from "react";
 import { X, Bell, CheckCheck, Trash2 } from "lucide-react";
 
-const NotificationModal = ({ notifications, onClose, onMarkRead, onMarkAllRead, onDelete }) => {
+const NotificationModal = ({
+  notifications,
+  onClose,
+  onMarkRead,
+  onMarkAllRead,
+  onDelete,
+}) => {
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
+      <div
         className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -16,7 +22,7 @@ const NotificationModal = ({ notifications, onClose, onMarkRead, onMarkAllRead, 
             </div>
             <h2 className="text-xl font-bold text-gray-800">Notifications</h2>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
             title="Close"
@@ -28,7 +34,7 @@ const NotificationModal = ({ notifications, onClose, onMarkRead, onMarkAllRead, 
         {/* Action Bar */}
         {notifications.length > 0 && (
           <div className="px-6 py-2 bg-gray-50 border-b border-gray-100 flex justify-end">
-            <button 
+            <button
               onClick={onMarkAllRead}
               className="text-xs font-semibold text-green-600 hover:text-green-700 flex items-center gap-1 transition-colors cursor-pointer"
             >
@@ -47,24 +53,30 @@ const NotificationModal = ({ notifications, onClose, onMarkRead, onMarkAllRead, 
             </div>
           ) : (
             notifications.map((notification) => (
-              <div 
+              <div
                 key={notification._id}
                 className={`p-4 rounded-xl border transition-all duration-200 ${
-                  notification.is_read 
-                    ? "bg-white border-gray-100" 
+                  notification.is_read
+                    ? "bg-white border-gray-100"
                     : "bg-green-50/50 border-green-100 shadow-sm"
                 }`}
               >
                 <div className="flex gap-3">
-                  <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${notification.is_read ? "bg-transparent" : "bg-green-500"}`} />
+                  <div
+                    className={`mt-1 h-2 w-2 rounded-full shrink-0 ${notification.is_read ? "bg-transparent" : "bg-green-500"}`}
+                  />
                   <div className="flex-1">
-                    <p className={`text-sm ${notification.is_read ? "text-gray-600" : "text-gray-900 font-medium"}`}>
+                    <p
+                      className={`text-sm ${notification.is_read ? "text-gray-600" : "text-gray-900 font-medium"}`}
+                    >
                       {notification.message}
                     </p>
                     <div className="mt-2 flex items-center justify-between text-[11px] text-gray-400">
-                      <span>{new Date(notification.created_at).toLocaleString()}</span>
+                      <span>
+                        {new Date(notification.created_at).toLocaleString()}
+                      </span>
                       {!notification.is_read && (
-                        <button 
+                        <button
                           onClick={() => onMarkRead(notification._id)}
                           className="text-green-600 font-semibold hover:underline cursor-pointer"
                         >

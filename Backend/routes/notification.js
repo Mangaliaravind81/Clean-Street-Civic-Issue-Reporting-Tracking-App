@@ -6,6 +6,10 @@ const auth = require("../middlewares.js");
 router.get("/", auth, notificationController.getNotifications);
 router.patch("/mark-all-read", auth, notificationController.markAllRead);
 router.patch("/:id/read", auth, notificationController.markAsRead);
-router.post("/:id/escalate", auth, notificationController.escalateStaleComplaint);
+router.post(
+  "/:id/escalate",
+  auth,
+  notificationController.escalateStaleComplaint,
+);
 
 module.exports = router;

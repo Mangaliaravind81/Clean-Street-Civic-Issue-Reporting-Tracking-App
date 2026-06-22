@@ -9,7 +9,9 @@ async function testNotifications() {
     console.log("Connected to MongoDB");
 
     // Find a complaint that HAS a user_id
-    const complaint = await Complaint.findOne({ user_id: { $exists: true, $ne: null } });
+    const complaint = await Complaint.findOne({
+      user_id: { $exists: true, $ne: null },
+    });
 
     if (!complaint) {
       console.log("No valid complaint with user_id found to test with.");
@@ -25,11 +27,13 @@ async function testNotifications() {
         title: "Test Complaint",
         description: "Test Description",
         status: "received",
-        issue_type: "Cleaning"
+        issue_type: "Cleaning",
       });
       verifyNotification(dummy);
     } else {
-      console.log(`Found Complaint: ${complaint.title}, User ID: ${complaint.user_id}`);
+      console.log(
+        `Found Complaint: ${complaint.title}, User ID: ${complaint.user_id}`,
+      );
       await verifyNotification(complaint);
     }
 

@@ -1,9 +1,9 @@
-import React from 'react';
-import AdminViewComplaints from './AdminViewComplaints';
-import VolunteerViewComplaints from './VolunteerViewComplaints';
-import UserViewComplaints from './UserViewComplaints';
+import React from "react";
+import AdminViewComplaints from "./AdminViewComplaints";
+import VolunteerViewComplaints from "./VolunteerViewComplaints";
+import UserViewComplaints from "./UserViewComplaints";
 
-const Viewcomplaints = () => {
+const ViewComplaints = () => {
   const userRole = localStorage.getItem("userRole");
 
   if (userRole === "admin") {
@@ -16,4 +16,4 @@ const Viewcomplaints = () => {
   }
 };
 
-export default Viewcomplaints;
+export default ViewComplaints;

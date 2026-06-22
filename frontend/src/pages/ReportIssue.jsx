@@ -3,7 +3,7 @@ import Navbaruser from "../components/Navbaruser";
 import MapComponent from "../components/MapComponent";
 import { useState, useRef, useEffect } from "react";
 
-const Reportissue = () => {
+const ReportIssue = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -363,4 +363,4 @@ const Reportissue = () => {
   );
 };
 
-export default Reportissue;
+export default ReportIssue;
