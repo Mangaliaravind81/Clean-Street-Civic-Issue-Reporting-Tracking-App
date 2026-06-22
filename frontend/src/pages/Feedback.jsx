@@ -41,6 +41,27 @@ const Feedback = () => {
     }
   }, [role]);
 
+  useEffect(() => {
+    if (role !== "admin" && role !== "volunteer" && !selectedComplaint) {
+      let initialList = [];
+      if (filter === "complaints") {
+        initialList = complaints.filter(c => c.status === "resolved");
+      } else if (filter === "pending") {
+        initialList = complaints.filter(c => {
+          const daysSince = (new Date() - new Date(c.created_at)) / (1000 * 60 * 60 * 24);
+          return (!c.assigned_to && daysSince > 7) || (c.status !== "resolved" && daysSince > 15);
+        });
+      }
+
+      if (initialList.length > 0) {
+        const latest = initialList[0];
+        setSelectedComplaint(latest);
+        setSelectedIssueType(latest.issue_type || "Other");
+        setSelectedComplaintId(latest._id);
+      }
+    }
+  }, [complaints, filter, role, selectedComplaint]);
+
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
@@ -169,7 +190,12 @@ const Feedback = () => {
     }
   };
 
-  const filteredComplaints = complaints;
+  const activeComplaints = filter === "pending" 
+    ? complaints.filter(c => {
+        const daysSince = (new Date() - new Date(c.created_at)) / (1000 * 60 * 60 * 24);
+        return (!c.assigned_to && daysSince > 7) || (c.status !== "resolved" && daysSince > 15);
+      }) 
+    : complaints.filter(c => c.status === "resolved");
 
   const getIssueIcon = (type) => {
     switch (type) {
@@ -198,12 +224,30 @@ const Feedback = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-green-700">Feedback Dashboard</h1>
           {role !== "admin" && role !== "volunteer" && (
-            <button 
-              onClick={() => setShowAppFeedbackModal(true)}
-              className="mt-4 md:mt-0 bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition cursor-pointer font-medium"
-            >
-              Give App Feedback & FAQS  
-            </button>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setFilter("submitted");
+                  setSelectedIssueType("");
+                  setSelectedComplaintId("");
+                  setSelectedComplaint(null);
+                }}
+                className={`mt-4 md:mt-0 px-4 py-2 rounded shadow transition cursor-pointer font-bold text-xs uppercase tracking-widest ${filter === "submitted" ? "bg-emerald-600 text-white" : "bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50"}`}
+              >
+                Submitted Feedbacks
+              </button>
+              <button 
+                onClick={() => {
+                  setFilter("app");
+                  setSelectedIssueType("");
+                  setSelectedComplaintId("");
+                  setSelectedComplaint(null);
+                }}
+                className={`mt-4 md:mt-0 px-4 py-2 rounded shadow transition cursor-pointer font-bold text-xs uppercase tracking-widest ${filter === "app" ? "bg-blue-600 text-white" : "bg-white text-blue-600 border border-blue-200 hover:bg-blue-50"}`}
+              >
+                App Submitted Feedbacks
+              </button>
+            </div>
           )}
         </div>
 
@@ -228,7 +272,7 @@ const Feedback = () => {
                                 <div className="p-3 flex-grow relative">
                                   <div className="absolute top-2 right-2">
                                     <div className={`px-1.5 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(fb.complaint_id.status)}`}>
-                                      {(fb.complaint_id.status || '').replace('_', ' ')}
+                                      {(fb.complaint_id.status || '').toLowerCase() === 'received' ? 'Pending' : (fb.complaint_id.status || '').replace('_', ' ')}
                                     </div>
                                   </div>
 
@@ -345,22 +389,35 @@ const Feedback = () => {
           </div>
         ) : role !== "admin" ? (
           <div className="w-11/12 md:w-5/6 lg:w-3/4 xl:w-3/5 mx-auto">
-            <div className="flex items-center space-x-4 mb-6">
-              <span className="font-medium text-gray-700">View:</span>
-              <select 
-                value={filter} 
-                onChange={(e) => {
-                  setFilter(e.target.value);
+            <div className="flex flex-col md:flex-row gap-3 mb-6">
+              <button 
+                onClick={() => {
+                  setFilter("complaints");
                   setSelectedIssueType("");
                   setSelectedComplaintId("");
                   setSelectedComplaint(null);
                 }}
-                className="border p-2 rounded-md shadow-sm outline-none focus:ring-2 focus:ring-green-500 bg-white cursor-pointer"
+                className={`flex-1 py-2 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-sm ${filter === "complaints" ? "bg-green-600 text-white shadow-green-200 shadow-lg scale-[1.02]" : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-green-600 cursor-pointer"}`}
               >
-                <option value="complaints">Complaint Feedbacks</option>
-                <option value="app">My App Feedbacks</option>
-                <option value="submitted">My Submitted Feedbacks</option>
-              </select>
+                Complaint Feedback
+              </button>
+              <button 
+                onClick={() => {
+                  setFilter("pending");
+                  setSelectedIssueType("");
+                  setSelectedComplaintId("");
+                  setSelectedComplaint(null);
+                }}
+                className={`flex-1 py-2 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-sm ${filter === "pending" ? "bg-rose-600 text-white shadow-rose-200 shadow-lg scale-[1.02]" : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-rose-600 cursor-pointer"}`}
+              >
+                Report to Admin
+              </button>
+              <button 
+                onClick={() => setShowAppFeedbackModal(true)}
+                className={`flex-1 py-2 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-sm bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-blue-600 cursor-pointer`}
+              >
+                Give App Feedbacks and FAQs
+              </button>
             </div>
 
             {loading ? <p>Loading...</p> : filter === "app" ? (
@@ -396,46 +453,50 @@ const Feedback = () => {
               </div>
             ) : (
               <div className="bg-white p-6 rounded-xl shadow border border-gray-100 space-y-6">
-                {complaints.length === 0 ? <p className="text-gray-500">No complaints found.</p> : (
+                {activeComplaints.length === 0 ? <p className="text-gray-500">No complaints found.</p> : (
                   <>
-                  <div className="flex flex-col md:flex-row gap-6 w-full mb-6">
+                  <div className="flex flex-col md:flex-row gap-6 w-full mb-6 bg-slate-50/50 p-4 rounded-[2rem] border border-slate-100 shadow-sm">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2 text-gray-700">Select Issue Type</label>
+                      <label className="block text-[10px] font-black uppercase tracking-widest mb-3 text-slate-400">Select Issue Type</label>
                       <select 
                         value={selectedIssueType} 
                         onChange={e => {
                           setSelectedIssueType(e.target.value);
-                          setSelectedComplaintId("");
-                          setSelectedComplaint(null);
+                          const filtered = activeComplaints.filter(c => e.target.value === "" || (c.issue_type || "Other") === e.target.value);
+                          if (filtered.length > 0) {
+                            setSelectedComplaintId(filtered[0]._id);
+                            setSelectedComplaint(filtered[0]);
+                          } else {
+                            setSelectedComplaintId("");
+                            setSelectedComplaint(null);
+                          }
                         }}
-                        className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        className="w-full border-none p-3 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/20 bg-white font-bold text-slate-700 shadow-sm cursor-pointer text-sm"
                       >
-                        <option value="">-- Select Issue Type --</option>
-                        {[...new Set(complaints.map(c => c.issue_type || "Other"))].map(type => (
+                        <option value="">-- All Types --</option>
+                        {[...new Set(activeComplaints.map(c => c.issue_type || "Other"))].map(type => (
                           <option key={type} value={type}>{type}</option>
                         ))}
                       </select>
                     </div>
 
-                    {selectedIssueType && (
-                      <div className="flex-1 animate-fade-in-up">
-                        <label className="block text-sm font-medium mb-2 text-gray-700">Select Complaint</label>
-                        <select 
-                          value={selectedComplaintId} 
-                          onChange={e => {
-                            setSelectedComplaintId(e.target.value);
-                            const comp = complaints.find(c => c._id === e.target.value);
-                            setSelectedComplaint(comp);
-                          }}
-                          className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                        >
-                          <option value="">-- Select Complaint Title --</option>
-                          {complaints.filter(c => (c.issue_type || "Other") === selectedIssueType).map(c => (
-                            <option key={c._id} value={c._id}>{c.title} ({c.status})</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    <div className="flex-1 animate-fade-in-up">
+                      <label className="block text-[10px] font-black uppercase tracking-widest mb-3 text-slate-400">Select Complaint Title</label>
+                      <select 
+                        value={selectedComplaintId} 
+                        onChange={e => {
+                          setSelectedComplaintId(e.target.value);
+                          const comp = activeComplaints.find(c => c._id === e.target.value);
+                          setSelectedComplaint(comp);
+                        }}
+                        className="w-full border-none p-3 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/20 bg-white font-bold text-slate-700 shadow-sm cursor-pointer text-sm"
+                      >
+                        <option value="">-- Select Report --</option>
+                        {activeComplaints.filter(c => selectedIssueType ? (c.issue_type || "Other") === selectedIssueType : true).map(c => (
+                          <option key={c._id} value={c._id}>{c.title} ({c.status.toLowerCase() === 'received' ? 'Pending' : c.status})</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                     {selectedComplaintId && selectedComplaint && (
@@ -443,27 +504,27 @@ const Feedback = () => {
                         {/* LEFT SIDE: Complaint Card */}
                         <div className="h-full">
                           <div className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full w-full">
-                            <div className="p-5 flex-grow relative">
-                              <div className="absolute top-5 right-5">
-                                <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(selectedComplaint.status)}`}>
-                                  {selectedComplaint.status.replace('_', ' ')}
+                            <div className="p-4 flex-grow relative">
+                              <div className="absolute top-4 right-4">
+                                <div className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(selectedComplaint.status)}`}>
+                                  {selectedComplaint.status.toLowerCase() === 'received' ? 'Pending' : selectedComplaint.status.replace('_', ' ')}
                                 </div>
                               </div>
 
-                              <div className="flex items-start gap-3 mb-3 max-w-[80%]">
+                              <div className="flex items-start gap-2 mb-2 max-w-[80%]">
                                 <div className="relative">
-                                  <span className="text-xl bg-slate-50 w-10 h-10 flex items-center justify-center rounded-xl shadow-inner flex-shrink-0">
+                                  <span className="text-lg bg-slate-50 w-8 h-8 flex items-center justify-center rounded-xl shadow-inner flex-shrink-0">
                                     {getIssueIcon(selectedComplaint.issue_type)}
                                   </span>
                                 </div>
                                 <div>
-                                  <h3 className="text-md font-black text-slate-800 leading-tight line-clamp-1">
+                                  <h3 className="text-sm font-black text-slate-800 leading-tight line-clamp-1">
                                     {selectedComplaint.title}
                                   </h3>
                                 </div>
                               </div>
 
-                              <p className="text-slate-500 text-[13px] mb-4 line-clamp-2 leading-tight font-medium">
+                              <p className="text-slate-500 text-[11px] mb-3 line-clamp-2 leading-tight font-medium">
                                 {selectedComplaint.description}
                               </p>
 
@@ -551,14 +612,14 @@ const Feedback = () => {
                         {/* RIGHT SIDE: Feedback / Action */}
                         <div className="h-full flex flex-col">
                           {selectedComplaint.status === "resolved" ? (
-                            <form onSubmit={submitFeedback} className="bg-green-50 p-8 rounded-[2rem] border border-green-100 flex-grow shadow-sm flex flex-col justify-center">
-                              <h4 className="font-black text-2xl mb-6 text-green-800 tracking-tight">Provide Feedback</h4>
-                              <div className="mb-5">
-                                <label className="block text-sm font-bold mb-2 text-green-900">Rating (Stars)</label>
+                            <form onSubmit={submitFeedback} className="bg-green-50 p-6 rounded-[2rem] border border-green-100 flex-grow shadow-sm flex flex-col justify-center">
+                              <h4 className="font-black text-xl mb-4 text-green-800 tracking-tight">Provide Feedback</h4>
+                              <div className="mb-4">
+                                <label className="block text-xs font-bold mb-2 text-green-900">Rating (Stars)</label>
                                 <select 
                                   value={rating} 
                                   onChange={e => setRating(Number(e.target.value))}
-                                  className="w-full border-none p-3.5 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/20 bg-white font-medium text-slate-700 shadow-sm cursor-pointer"
+                                  className="w-full border-none p-3 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/20 bg-white font-medium text-slate-700 shadow-sm cursor-pointer text-sm"
                                 >
                                   <option value={5}>5 - Excellent 🌟</option>
                                   <option value={4}>4 - Good ⭐</option>
@@ -567,35 +628,35 @@ const Feedback = () => {
                                   <option value={1}>1 - Terrible 😡</option>
                                 </select>
                               </div>
-                              <div className="mb-8">
-                                <label className="block text-sm font-bold mb-2 text-green-900">Description</label>
+                              <div className="mb-6">
+                                <label className="block text-xs font-bold mb-2 text-green-900">Description</label>
                                 <textarea
                                   value={description}
                                   onChange={e => setDescription(e.target.value)}
-                                  className="w-full border-none p-4 rounded-xl h-36 focus:outline-none focus:ring-4 focus:ring-green-500/20 shadow-sm resize-none text-slate-700 font-medium"
+                                  className="w-full border-none p-4 rounded-xl h-24 focus:outline-none focus:ring-4 focus:ring-green-500/20 shadow-sm resize-none text-slate-700 font-medium text-sm"
                                   required
                                   placeholder="Share your feedback about the resolution..."
                                 ></textarea>
                               </div>
                               <button 
                                 type="submit" 
-                                className="w-full bg-green-600 text-white font-black py-4 rounded-xl shadow-md hover:bg-green-700 hover:shadow-lg hover:shadow-green-700/20 transition-all cursor-pointer tracking-widest uppercase"
+                                className="w-full bg-green-600 text-white font-black py-3 rounded-xl shadow-md hover:bg-green-700 hover:shadow-lg hover:shadow-green-700/20 transition-all cursor-pointer tracking-widest uppercase text-xs"
                               >
                                 Submit Feedback
                               </button>
                             </form>
                           ) : (
-                            <div className="bg-amber-50 p-8 rounded-[2rem] border border-amber-100 flex-grow shadow-sm flex flex-col justify-center items-center text-center">
-                              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm mb-6">
-                                <MdErrorOutline className="text-4xl text-amber-500" />
+                            <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 flex-grow shadow-sm flex flex-col justify-center items-center text-center">
+                              <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm mb-4">
+                                <MdErrorOutline className="text-3xl text-amber-500" />
                               </div>
-                              <h4 className="font-black text-2xl text-amber-900 mb-2">Complaint Pending</h4>
-                              <p className="text-sm text-slate-600 mb-10 max-w-[250px]">You can provide feedback once the complaint is resolved.</p>
+                              <h4 className="font-black text-xl text-amber-900 mb-2">Complaint Pending</h4>
+                              <p className="text-xs text-slate-600 mb-6 max-w-[250px]">You can provide feedback once the complaint is resolved.</p>
                               
                               <button 
                                 onClick={() => handleEscalate(selectedComplaint._id)}
                                 disabled={selectedComplaint.escalation_level === "admin"}
-                                className={`w-full max-w-[300px] px-6 py-4 rounded-2xl shadow-md transition-all font-black tracking-widest ${selectedComplaint.escalation_level === "admin" ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-rose-600 text-white hover:bg-rose-700 hover:shadow-lg hover:shadow-rose-600/20 hover:-translate-y-1 cursor-pointer"}`}
+                                className={`w-full max-w-[250px] px-6 py-3 rounded-2xl shadow-md transition-all font-black text-xs tracking-widest ${selectedComplaint.escalation_level === "admin" ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-rose-600 text-white hover:bg-rose-700 hover:shadow-lg hover:shadow-rose-600/20 hover:-translate-y-1 cursor-pointer"}`}
                               >
                                 {selectedComplaint.escalation_level === "admin" ? "ESCALATED TO ADMIN" : "REPORT TO ADMIN"}
                               </button>

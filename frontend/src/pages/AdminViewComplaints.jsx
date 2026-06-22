@@ -27,7 +27,8 @@ const Viewcomplaints = () => {
 
   const fetchComplaints = async () => {
     const res = await axios.get("http://localhost:5000/complaints");
-    setComplaints(res.data.complaints || []);
+    const validComplaints = (res.data.complaints || []).filter(c => c.user_id);
+    setComplaints(validComplaints);
   };
 
   const [staffLocation, setStaffLocation] = useState(null);
@@ -49,8 +50,27 @@ const Viewcomplaints = () => {
         console.error("Volunteers fetch failed", err);
       }
 
-      // 1. Try real-time browser geolocation first
-      if (navigator.geolocation) {
+      // 1. Try to get profile location first
+      let hasProfileLocation = false;
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+      if (token && userId) {
+        try {
+          const uRes = await axios.get(`http://localhost:5000/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (uRes.data.user.location_coords) {
+             const [lat, lng] = uRes.data.user.location_coords.split(",").map(Number);
+             setStaffLocation({ lat, lng });
+             hasProfileLocation = true;
+          }
+        } catch (e) {
+          console.error("Profile location fetch failed", e);
+        }
+      }
+
+      // 2. Fallback to real-time browser geolocation if no profile location
+      if (!hasProfileLocation && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             console.log("Real-time location found");
@@ -59,24 +79,8 @@ const Viewcomplaints = () => {
               lng: pos.coords.longitude
             });
           },
-          async (err) => {
-            console.warn("Geolocation failed, using profile fallback:", err.message);
-            // 2. Fallback to Profile location if denied/unavailable
-            const token = localStorage.getItem("token");
-            const userId = localStorage.getItem("userId");
-            if (token && userId) {
-              try {
-                const uRes = await axios.get(`http://localhost:5000/users/${userId}`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-                if (uRes.data.user.location_coords) {
-                   const [lat, lng] = uRes.data.user.location_coords.split(",").map(Number);
-                   setStaffLocation({ lat, lng });
-                }
-              } catch (e) {
-                console.error("Profile location fetch failed", e);
-              }
-            }
+          (err) => {
+            console.warn("Geolocation fallback failed:", err.message);
           }
         );
       }
@@ -441,7 +445,7 @@ const Viewcomplaints = () => {
               <div className="p-5 flex-grow relative">
                 <div className="absolute top-5 right-5">
                   <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(item.status)}`}>
-                    {item.status.replace('_', ' ')}
+                    {item.status.toLowerCase() === 'received' ? 'Pending' : item.status.replace('_', ' ')}
                   </div>
                 </div>
 
@@ -762,7 +766,7 @@ const Viewcomplaints = () => {
                 <div className="mb-10 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex items-center gap-3 mb-6">
                     <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(selected.status)}`}>
-                      {selected.status.replace('_', ' ')}
+                      {selected.status.toLowerCase() === 'received' ? 'Pending' : selected.status.replace('_', ' ')}
                     </div>
                     <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
                       <FaCalendarAlt />
@@ -1101,7 +1105,7 @@ const Viewcomplaints = () => {
             distance = calculateDistance(cLat, cLng, vLat, vLng);
           }
           return { ...v, distance };
-        }).sort((a, b) => a.distance - b.distance);
+        }).filter(v => v.distance <= 20).sort((a, b) => a.distance - b.distance);
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[10000] flex items-center justify-center p-4">
@@ -1123,15 +1127,25 @@ const Viewcomplaints = () => {
                   {sortedVolunteers.map(v => (
                     <div key={v._id} className="bg-white border border-gray-100 p-5 rounded-3xl flex items-center justify-between hover:border-blue-200 transition-all shadow-sm group">
                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-black text-lg shadow-inner">
-                             {v.name.charAt(0).toUpperCase()}
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-black text-lg shadow-inner overflow-hidden shrink-0">
+                             {v.profile_photo ? (
+                               <img src={v.profile_photo} alt={v.name} className="w-full h-full object-cover" />
+                             ) : (
+                               v.name?.charAt(0)?.toUpperCase() || 'V'
+                             )}
                           </div>
-                          <div>
-                             <p className="font-bold text-gray-800">{v.name}</p>
+                          <div className="min-w-0">
+                             <p className="font-bold text-gray-800 truncate">{v.name || 'Unknown Volunteer'}</p>
+                             {(v.email || v.phone_number) && (
+                               <p className="text-[10px] font-medium text-gray-500 mt-0.5 truncate max-w-[220px]">
+                                 {v.email} {v.email && v.phone_number && '|'} {v.phone_number}
+                               </p>
+                             )}
                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <FaMapMarkerAlt className={v.distance < 5 ? "text-emerald-500" : "text-gray-400"} size={10} />
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                  {v.distance === Infinity ? "Location Unknown" : `${v.distance.toFixed(1)} km away`}
+                                <FaMapMarkerAlt className={v.distance < 5 ? "text-emerald-500 shrink-0" : "text-gray-400 shrink-0"} size={10} />
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[200px]">
+                                  {v.location ? `${v.location} ` : ""}
+                                  <span className={v.distance < 5 ? "text-emerald-400/70" : "text-gray-300"}>({v.distance === Infinity ? "Unknown" : `${v.distance.toFixed(1)} km`})</span>
                                 </p>
                              </div>
                           </div>

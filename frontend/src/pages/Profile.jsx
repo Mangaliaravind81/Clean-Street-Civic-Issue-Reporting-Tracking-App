@@ -84,6 +84,7 @@ const Profile = () => {
       
       const data = new FormData();
       data.append("name", formData.name);
+      data.append("username", formData.username);
       data.append("phone_number", formData.phone_number);
       data.append("location", formData.location);
       data.append("bio", formData.bio);
@@ -152,9 +153,9 @@ const Profile = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">User profile</h1>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
           {/* Left Sidebar Card */}
-          <div className="lg:col-span-4 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm flex flex-col items-center text-center">
+          <div className="lg:col-span-4 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm flex flex-col items-center text-center lg:sticky lg:top-8 z-10">
              <div className="relative mb-6">
                 <input 
                   type="file" 
@@ -274,10 +275,11 @@ const Profile = () => {
                         <FaRegUser className="text-blue-500/50" /> Username
                      </label>
                      <input 
-                       disabled
+                       disabled={!isEditing}
                        type="text"
                        value={formData.username}
-                       className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-xl text-gray-400 font-medium cursor-not-allowed"
+                       onChange={(e) => setFormData({...formData, username: e.target.value})}
+                       className={`w-full px-5 py-3.5 rounded-xl font-medium transition-all ${isEditing ? 'bg-white border-blue-200 border-2 focus:ring-4 focus:ring-blue-50 shadow-sm' : 'bg-gray-50/50 border-gray-100 border text-gray-400 cursor-not-allowed'}`}
                      />
                   </div>
 
@@ -350,7 +352,7 @@ const Profile = () => {
                   ></textarea>
                </div>
 
-               {(user?.role === 'admin' || user?.role === 'volunteer') && (
+               {user && (
                  <div className="pt-8 mt-6 border-t border-gray-100 flex flex-col gap-6">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex-1">

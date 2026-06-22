@@ -62,5 +62,7 @@ router.get("/:complaint_id/votes", voteController.getVotes);
 router.post("/:complaint_id/comments", auth, commentController.addComment);
 // GET /complaints/:id/comments
 router.get("/:complaint_id/comments", commentController.getComments);
+// DELETE /complaints/:complaint_id/comments/:id
+router.delete("/:complaint_id/comments/:id", auth, commentController.deleteComment);
 
 module.exports = router;

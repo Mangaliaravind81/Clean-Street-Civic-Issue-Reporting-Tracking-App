@@ -81,7 +81,7 @@ const AdminSidebar = () => {
         <SidebarLink to="/admin-dashboard" icon={<FaChartLine />} label="Overview" active={path === "/admin-dashboard"} />
         <SidebarLink to="/manage-complaints" icon={<FaListUl />} label="Manage Complaints" active={path === "/manage-complaints"} />
         <SidebarLink to="/user-management" icon={<FaUsers />} label="Users" active={path === "/user-management"} />
-        <SidebarLink to="/zone-management" icon={<FaMapMarkedAlt />} label="Zones" active={path === "/zone-management"} />
+        {/* <SidebarLink to="/zone-management" icon={<FaMapMarkedAlt />} label="Zones" active={path === "/zone-management"} /> */}
         <button 
           onClick={handleShowActivity} 
           className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-medium cursor-pointer"

@@ -59,10 +59,25 @@ const Register = () => {
       const data = await res.json();
       setLoading(false);
 
-      alert(data.message);
+      if (data.success) {
+        alert(data.message);
+        
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("userId", data.user.id);
+          localStorage.setItem("username", data.user.name);
+          localStorage.setItem("userRole", data.user.role);
 
-      if (data.message === "Registered") {
-        navigate("/login");
+          if (data.user.role === "admin") {
+            navigate("/admin-dashboard");
+          } else {
+            navigate("/dashboard");
+          }
+        } else {
+          navigate("/login");
+        }
+      } else {
+        alert(data.message || "Registration failed");
       }
     } catch (err) {
       setLoading(false);
