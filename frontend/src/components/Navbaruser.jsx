@@ -18,7 +18,7 @@ const Navbaruser = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/notifications", {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/notifications`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       if (response.data.success) {
@@ -41,7 +41,7 @@ const Navbaruser = () => {
   const handleMarkRead = async (id) => {
     try {
       await axios.patch(
-        `http://localhost:5000/notifications/${id}/read`,
+        `${import.meta.env.VITE_API_URL}/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -56,7 +56,7 @@ const Navbaruser = () => {
   const handleMarkAllRead = async () => {
     try {
       await axios.patch(
-        "http://localhost:5000/notifications/mark-all-read",
+        `${import.meta.env.VITE_API_URL}/notifications/mark-all-read`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

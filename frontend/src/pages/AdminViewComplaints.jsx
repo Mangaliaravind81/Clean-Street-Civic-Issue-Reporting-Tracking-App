@@ -41,7 +41,7 @@ const Viewcomplaints = () => {
   const userRole = localStorage.getItem("userRole"); // 'user', 'volunteer', 'admin'
 
   const fetchComplaints = async () => {
-    const res = await axios.get("http://localhost:5000/complaints");
+    const res = await axios.get("${import.meta.env.VITE_API_URL}/complaints");
     const validComplaints = (res.data.complaints || []).filter(
       (c) => c.user_id,
     );
@@ -59,7 +59,7 @@ const Viewcomplaints = () => {
         const token = localStorage.getItem("token");
         if (token) {
           const vRes = await axios.get(
-            "http://localhost:5000/users/volunteers",
+            `${import.meta.env.VITE_API_URL}/users/volunteers`,
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -77,7 +77,7 @@ const Viewcomplaints = () => {
       if (token && userId) {
         try {
           const uRes = await axios.get(
-            `http://localhost:5000/users/${userId}`,
+            `${import.meta.env.VITE_API_URL}/users/${userId}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -131,9 +131,9 @@ const Viewcomplaints = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -142,7 +142,7 @@ const Viewcomplaints = () => {
   const like = async (id) => {
     const token = localStorage.getItem("token");
     await axios.post(
-      `http://localhost:5000/complaints/${id}/votes`,
+      `${import.meta.env.VITE_API_URL}/complaints/${id}/votes`,
       {
         user_id: userId,
         vote_type: "upvote",
@@ -157,7 +157,7 @@ const Viewcomplaints = () => {
   const unlike = async (id) => {
     const token = localStorage.getItem("token");
     await axios.post(
-      `http://localhost:5000/complaints/${id}/votes`,
+      `${import.meta.env.VITE_API_URL}/complaints/${id}/votes`,
       {
         user_id: userId,
         vote_type: "downvote",
@@ -173,7 +173,7 @@ const Viewcomplaints = () => {
     if (!comment.trim()) return;
     const token = localStorage.getItem("token");
     await axios.post(
-      `http://localhost:5000/complaints/${id}/comments`,
+      `${import.meta.env.VITE_API_URL}/complaints/${id}/comments`,
       {
         user_id: userId,
         content: comment,
@@ -214,7 +214,7 @@ const Viewcomplaints = () => {
   const deleteComplaint = async (id) => {
     if (window.confirm("Delete this complaint?")) {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/complaints/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/complaints/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchComplaints();
@@ -226,7 +226,7 @@ const Viewcomplaints = () => {
     try {
       const token = localStorage.getItem("token");
       const resUpdate = await axios.patch(
-        `http://localhost:5000/complaints/${selected._id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${selected._id}`,
         editData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -237,7 +237,7 @@ const Viewcomplaints = () => {
         alert("Complaint updated successfully!");
         await fetchComplaints();
         const res = await axios.get(
-          `http://localhost:5000/complaints/${selected._id}`,
+          `${import.meta.env.VITE_API_URL}/complaints/${selected._id}`,
         );
         setSelected(res.data.complaint);
         setIsEditing(false);
@@ -264,7 +264,7 @@ const Viewcomplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -283,7 +283,7 @@ const Viewcomplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}`,
         { volunteer_id: userId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -301,7 +301,7 @@ const Viewcomplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${complaintId}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${complaintId}`,
         { volunteer_id: volunteerId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -320,7 +320,7 @@ const Viewcomplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}/reject`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}/reject`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -338,7 +338,7 @@ const Viewcomplaints = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `http://localhost:5000/notifications/${id}/escalate`,
+        `${import.meta.env.VITE_API_URL}/notifications/${id}/escalate`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -607,13 +607,13 @@ const Viewcomplaints = () => {
                           </span>
                           {(userRole === "volunteer" ||
                             userRole === "admin") && (
-                            <a
-                              href={`mailto:${item.user_id.email}`}
-                              className="text-[9px] font-bold text-slate-400 truncate hover:text-blue-600 transition-colors"
-                            >
-                              {item.user_id.email}
-                            </a>
-                          )}
+                              <a
+                                href={`mailto:${item.user_id.email}`}
+                                className="text-[9px] font-bold text-slate-400 truncate hover:text-blue-600 transition-colors"
+                              >
+                                {item.user_id.email}
+                              </a>
+                            )}
                         </div>
                       </div>
                     ) : (
@@ -669,8 +669,8 @@ const Viewcomplaints = () => {
                   {(userRole === "admin" || userRole === "volunteer") && (
                     <div className="mt-4 p-3 bg-white rounded-xl border border-slate-100 space-y-2">
                       {userRole === "admin" ||
-                      (userRole === "volunteer" &&
-                        item.assigned_to?._id === userId) ? (
+                        (userRole === "volunteer" &&
+                          item.assigned_to?._id === userId) ? (
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                             Control Center
@@ -807,11 +807,10 @@ const Viewcomplaints = () => {
                                 e.stopPropagation();
                                 handleEscalate(item._id);
                               }}
-                              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all shadow-sm cursor-pointer whitespace-nowrap ${
-                                item.escalation_level !== "admin"
+                              className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all shadow-sm cursor-pointer whitespace-nowrap ${item.escalation_level !== "admin"
                                   ? "bg-amber-500 text-white hover:bg-amber-600"
                                   : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                              }`}
+                                }`}
                               disabled={item.escalation_level === "admin"}
                             >
                               {item.escalation_level !== "admin"
@@ -866,7 +865,7 @@ const Viewcomplaints = () => {
               <div className="w-full lg:w-1/2 h-[250px] lg:h-[350px] bg-slate-100 relative group/img overflow-hidden border-r border-slate-50">
                 <div className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                   {selected.photo ||
-                  (selected.images && selected.images.length > 0) ? (
+                    (selected.images && selected.images.length > 0) ? (
                     (Array.isArray(selected.photo)
                       ? selected.photo
                       : selected.images || [selected.photo]
@@ -899,18 +898,18 @@ const Viewcomplaints = () => {
                 </div>
                 {(selected.photo?.length > 1 ||
                   selected.images?.length > 1) && (
-                  <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2 pointer-events-none">
-                    {(Array.isArray(selected.photo)
-                      ? selected.photo
-                      : selected.images
-                    ).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-white/50 shadow-sm"
-                      />
-                    ))}
-                  </div>
-                )}
+                    <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2 pointer-events-none">
+                      {(Array.isArray(selected.photo)
+                        ? selected.photo
+                        : selected.images
+                      ).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1.5 h-1.5 rounded-full bg-white/50 shadow-sm"
+                        />
+                      ))}
+                    </div>
+                  )}
                 <button
                   onClick={() => openPreview(selected.photo || selected.images)}
                   className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 p-2.5 rounded-xl text-white hover:bg-white/40 transition-all cursor-pointer shadow-lg"
@@ -1187,22 +1186,22 @@ const Viewcomplaints = () => {
                   <>
                     {(userId === selected.user_id?._id ||
                       userRole === "admin") && (
-                      <button
-                        onClick={startEditing}
-                        className="flex items-center gap-3 bg-white border border-slate-200 text-slate-700 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-blue-600 hover:text-blue-600 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer"
-                      >
-                        <LuPencil className="text-base" /> Edit Report
-                      </button>
-                    )}
+                        <button
+                          onClick={startEditing}
+                          className="flex items-center gap-3 bg-white border border-slate-200 text-slate-700 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-blue-600 hover:text-blue-600 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer"
+                        >
+                          <LuPencil className="text-base" /> Edit Report
+                        </button>
+                      )}
                     {(userId === selected.user_id?._id ||
                       userRole === "admin") && (
-                      <button
-                        onClick={() => deleteComplaint(selected._id)}
-                        className="flex items-center gap-3 bg-rose-50 border border-rose-100 text-rose-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-300 ml-auto cursor-pointer"
-                      >
-                        <MdOutlineDelete className="text-xl" /> Delete
-                      </button>
-                    )}
+                        <button
+                          onClick={() => deleteComplaint(selected._id)}
+                          className="flex items-center gap-3 bg-rose-50 border border-rose-100 text-rose-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-300 ml-auto cursor-pointer"
+                        >
+                          <MdOutlineDelete className="text-xl" /> Delete
+                        </button>
+                      )}
                   </>
                 ) : (
                   <>

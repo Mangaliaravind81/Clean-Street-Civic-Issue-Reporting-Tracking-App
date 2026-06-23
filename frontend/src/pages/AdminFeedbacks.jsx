@@ -46,7 +46,7 @@ const AdminFeedbacks = () => {
 
   const fetchAppFeedbacks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/feedbacks/admin/app", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/feedbacks/admin/app`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -61,7 +61,7 @@ const AdminFeedbacks = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "http://localhost:5000/feedbacks/admin/volunteer",
+        `${import.meta.env.VITE_API_URL}/feedbacks/admin/volunteer`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -130,7 +130,7 @@ const AdminFeedbacks = () => {
                                 src={
                                   fb.complaint_id.photo[0].startsWith("http")
                                     ? fb.complaint_id.photo[0]
-                                    : `http://localhost:5000${fb.complaint_id.photo[0]}`
+                                    : `${import.meta.env.VITE_API_URL}${fb.complaint_id.photo[0]}`
                                 }
                                 alt="Complaint"
                                 className="w-full sm:w-28 h-28 object-cover rounded-md flex-shrink-0"

@@ -61,9 +61,9 @@ const AdminDashboard = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [analyticsRes, complaintsRes, zonesRes] = await Promise.all([
-          axios.get("http://localhost:5000/admin/analytics", config),
-          axios.get("http://localhost:5000/complaints"),
-          axios.get("http://localhost:5000/zones", config),
+          axios.get(`${import.meta.env.VITE_API_URL}/admin/analytics`, config),
+          axios.get(`${import.meta.env.VITE_API_URL}/complaints`),
+          axios.get(`${import.meta.env.VITE_API_URL}/zones`, config),
         ]);
         setData(analyticsRes.data);
         setComplaints(complaintsRes.data.complaints || []);

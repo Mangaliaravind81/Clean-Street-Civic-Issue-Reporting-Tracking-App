@@ -24,7 +24,7 @@ const AdminSidebar = () => {
     setLoadingLogs(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/admin/analytics", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/analytics`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRecentLogs(res.data.recentLogs || []);
@@ -38,7 +38,7 @@ const AdminSidebar = () => {
   const handleExportCSV = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/admin/export", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/export`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = res.data.complaints;

@@ -77,7 +77,7 @@ const Feedback = () => {
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/feedbacks/volunteer", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/feedbacks/volunteer`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -92,7 +92,7 @@ const Feedback = () => {
 
   const fetchAppFeedbacks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/feedbacks/app", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/feedbacks/app`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -105,7 +105,7 @@ const Feedback = () => {
 
   const fetchUserFeedbacks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/feedbacks/user", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/feedbacks/user`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -119,7 +119,7 @@ const Feedback = () => {
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/complaints", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/complaints`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -139,7 +139,7 @@ const Feedback = () => {
   const handleEscalate = async (complaintId) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/complaints/${complaintId}/escalate`,
+        `${import.meta.env.VITE_API_URL}/complaints/${complaintId}/escalate`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -165,7 +165,7 @@ const Feedback = () => {
       }
 
       const res = await axios.post(
-        "http://localhost:5000/feedbacks",
+        `${import.meta.env.VITE_API_URL}/feedbacks`,
         {
           complaint_id: selectedComplaint._id,
           volunteer_id: volunteer_id_value,
@@ -194,7 +194,7 @@ const Feedback = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "http://localhost:5000/feedbacks",
+        `${import.meta.env.VITE_API_URL}/feedbacks`,
         {
           rating: appRating,
           description: appDescription,
@@ -219,13 +219,13 @@ const Feedback = () => {
   const activeComplaints =
     filter === "pending"
       ? complaints.filter((c) => {
-          const daysSince =
-            (new Date() - new Date(c.created_at)) / (1000 * 60 * 60 * 24);
-          return (
-            (!c.assigned_to && daysSince > 7) ||
-            (c.status !== "resolved" && daysSince > 15)
-          );
-        })
+        const daysSince =
+          (new Date() - new Date(c.created_at)) / (1000 * 60 * 60 * 24);
+        return (
+          (!c.assigned_to && daysSince > 7) ||
+          (c.status !== "resolved" && daysSince > 15)
+        );
+      })
       : complaints.filter((c) => c.status === "resolved");
 
   const getIssueIcon = (type) => {
@@ -332,8 +332,8 @@ const Feedback = () => {
                                       ).toLowerCase() === "received"
                                         ? "Pending"
                                         : (
-                                            fb.complaint_id.status || ""
-                                          ).replace("_", " ")}
+                                          fb.complaint_id.status || ""
+                                        ).replace("_", " ")}
                                     </div>
                                   </div>
 
@@ -371,7 +371,7 @@ const Feedback = () => {
                                       </div>
                                       {new Date(
                                         fb.complaint_id.created_at ||
-                                          new Date(),
+                                        new Date(),
                                       ).toLocaleDateString(undefined, {
                                         month: "short",
                                         day: "numeric",
@@ -467,7 +467,7 @@ const Feedback = () => {
                                         "http",
                                       )
                                         ? fb.user_id.profile_photo
-                                        : `http://localhost:5000${fb.user_id.profile_photo}`
+                                        : `${import.meta.env.VITE_API_URL}${fb.user_id.profile_photo}`
                                     }
                                     alt="User"
                                     className="w-5 h-5 rounded-full object-cover border border-green-200 shadow-sm"
@@ -662,7 +662,7 @@ const Feedback = () => {
                             .filter((c) =>
                               selectedIssueType
                                 ? (c.issue_type || "Other") ===
-                                  selectedIssueType
+                                selectedIssueType
                                 : true,
                             )
                             .map((c) => (
@@ -689,12 +689,12 @@ const Feedback = () => {
                                   className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-sm ${getStatusColor(selectedComplaint.status)}`}
                                 >
                                   {selectedComplaint.status.toLowerCase() ===
-                                  "received"
+                                    "received"
                                     ? "Pending"
                                     : selectedComplaint.status.replace(
-                                        "_",
-                                        " ",
-                                      )}
+                                      "_",
+                                      " ",
+                                    )}
                                 </div>
                               </div>
 

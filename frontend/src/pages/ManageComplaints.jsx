@@ -31,9 +31,9 @@ const ManageComplaints = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -52,8 +52,8 @@ const ManageComplaints = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [compRes, volRes] = await Promise.all([
-          axios.get("http://localhost:5000/complaints"),
-          axios.get("http://localhost:5000/users/volunteers", config),
+          axios.get(`${import.meta.env.VITE_API_URL}/complaints`),
+          axios.get(`${import.meta.env.VITE_API_URL}/users/volunteers`, config),
         ]);
         setComplaints(compRes.data.complaints || []);
         setVolunteers(volRes.data.volunteers || []);
@@ -70,7 +70,7 @@ const ManageComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -89,7 +89,7 @@ const ManageComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.patch(
-        `http://localhost:5000/complaints/${id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}`,
         { volunteer_id },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -117,7 +117,7 @@ const ManageComplaints = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this complaint permanently?")) return;
     try {
-      await axios.delete(`http://localhost:5000/complaints/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/complaints/${id}`);
       setComplaints(complaints.filter((c) => c._id !== id));
       alert("Complaint deleted");
     } catch (err) {
@@ -235,13 +235,12 @@ const ManageComplaints = () => {
                           onChange={(e) =>
                             handleUpdateStatus(c._id, e.target.value)
                           }
-                          className={`text-xs font-bold px-3 py-2 rounded-xl outline-none border transition-all ${
-                            c.status === "resolved"
+                          className={`text-xs font-bold px-3 py-2 rounded-xl outline-none border transition-all ${c.status === "resolved"
                               ? "bg-green-50 border-green-100 text-green-600"
                               : c.status === "in_review"
                                 ? "bg-blue-50 border-blue-100 text-blue-600"
                                 : "bg-yellow-50 border-yellow-100 text-yellow-600"
-                          }`}
+                            }`}
                         >
                           <option value="received">RECEIVED</option>
                           <option value="in_review">IN REVIEW</option>

@@ -41,7 +41,7 @@ const UserViewComplaints = () => {
   const userRole = localStorage.getItem("userRole"); // 'user', 'volunteer', 'admin'
 
   const fetchComplaints = async () => {
-    const res = await axios.get("http://localhost:5000/complaints");
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/complaints`);
     const validComplaints = (res.data.complaints || []).filter(
       (c) => c.user_id,
     );
@@ -59,7 +59,7 @@ const UserViewComplaints = () => {
         const token = localStorage.getItem("token");
         if (token) {
           const vRes = await axios.get(
-            "http://localhost:5000/users/volunteers",
+            `${import.meta.env.VITE_API_URL}/users/volunteers`,
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -77,7 +77,7 @@ const UserViewComplaints = () => {
       if (token && userId) {
         try {
           const uRes = await axios.get(
-            `http://localhost:5000/users/${userId}`,
+            `${import.meta.env.VITE_API_URL}/users/${userId}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -142,7 +142,7 @@ const UserViewComplaints = () => {
   const like = async (id) => {
     const token = localStorage.getItem("token");
     await axios.post(
-      `http://localhost:5000/complaints/${id}/votes`,
+      `${import.meta.env.VITE_API_URL}/complaints/${id}/votes`,
       {
         user_id: userId,
         vote_type: "upvote",
@@ -157,7 +157,7 @@ const UserViewComplaints = () => {
   const unlike = async (id) => {
     const token = localStorage.getItem("token");
     await axios.post(
-      `http://localhost:5000/complaints/${id}/votes`,
+      `${import.meta.env.VITE_API_URL}/complaints/${id}/votes`,
       {
         user_id: userId,
         vote_type: "downvote",
@@ -173,7 +173,7 @@ const UserViewComplaints = () => {
     if (!comment.trim()) return;
     const token = localStorage.getItem("token");
     await axios.post(
-      `http://localhost:5000/complaints/${id}/comments`,
+      `${import.meta.env.VITE_API_URL}/complaints/${id}/comments`,
       {
         user_id: userId,
         content: comment,
@@ -191,7 +191,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:5000/complaints/${complaintId}/comments/${commentId}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${complaintId}/comments/${commentId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -230,7 +230,7 @@ const UserViewComplaints = () => {
   const deleteComplaint = async (id) => {
     if (window.confirm("Delete this complaint?")) {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/complaints/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/complaints/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchComplaints();
@@ -242,7 +242,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       const resUpdate = await axios.patch(
-        `http://localhost:5000/complaints/${selected._id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${selected._id}`,
         editData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -253,7 +253,7 @@ const UserViewComplaints = () => {
         alert("Complaint updated successfully!");
         await fetchComplaints();
         const res = await axios.get(
-          `http://localhost:5000/complaints/${selected._id}`,
+          `${import.meta.env.VITE_API_URL}/complaints/${selected._id}`,
         );
         setSelected(res.data.complaint);
         setIsEditing(false);
@@ -280,7 +280,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -299,7 +299,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}`,
         { volunteer_id: userId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -317,7 +317,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${complaintId}`,
+        `${import.meta.env.VITE_API_URL}/complaints/${complaintId}`,
         { volunteer_id: volunteerId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -336,7 +336,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/complaints/${id}/reject`,
+        `${import.meta.env.VITE_API_URL}/complaints/${id}/reject`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -354,7 +354,7 @@ const UserViewComplaints = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `http://localhost:5000/notifications/${id}/escalate`,
+        `${import.meta.env.VITE_API_URL}/notifications/${id}/escalate`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -31,7 +31,7 @@ const ZoneManagement = () => {
 
     const fetchZones = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/zones");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/zones`);
         setZones(res.data.zones || []);
       } catch (err) {
         console.error("Failed to fetch zones", err);
@@ -45,7 +45,7 @@ const ZoneManagement = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/zones", newZone);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/zones`, newZone);
       setZones([res.data.zone, ...zones]);
       setNewZone({ name: "", description: "", boundary_coords: "" });
       setShowAdd(false);
@@ -58,7 +58,7 @@ const ZoneManagement = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this zone?")) return;
     try {
-      await axios.delete(`http://localhost:5000/zones/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/zones/${id}`);
       setZones(zones.filter((z) => z._id !== id));
       alert("Zone deleted");
     } catch (err) {

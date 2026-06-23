@@ -29,7 +29,7 @@ const UserManagement = () => {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/users", {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(res.data.users);
@@ -46,7 +46,7 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.patch(
-        `http://localhost:5000/users/${id}`,
+        `${import.meta.env.VITE_API_URL}/users/${id}`,
         { role: newRole },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -68,7 +68,7 @@ const UserManagement = () => {
       return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/users/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(users.filter((u) => u._id !== id));

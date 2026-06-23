@@ -25,14 +25,14 @@ const Dashboard = () => {
       try {
         if (userRole === "admin") {
           const token = localStorage.getItem("token");
-          const res = await axios.get("http://localhost:5000/admin/analytics", {
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/analytics `, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setAnalytics(res.data.metrics);
-          const compRes = await axios.get("http://localhost:5000/complaints");
+          const compRes = await axios.get(`${import.meta.env.VITE_API_URL}/complaints`);
           setIssues(compRes.data.complaints || []);
         } else {
-          const compRes = await axios.get("http://localhost:5000/complaints");
+          const compRes = await axios.get(`${import.meta.env.VITE_API_URL}/complaints`);
           let myIssues = compRes.data.complaints || [];
           if (userRole === "user") {
             myIssues = myIssues.filter(
