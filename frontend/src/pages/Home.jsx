@@ -36,11 +36,7 @@ function Home() {
 
           <div className="mt-6 flex justify-center gap-4">
             <button className="bg-green-600 text-white px-6 py-3 rounded-lg">
-              Report Issue
-            </button>
-
-            <button className="bg-white border text-green-700 px-6 py-3 rounded-lg">
-              View Reports
+              <NavLink to="/login">Report Issue</NavLink>
             </button>
           </div>
         </div>
